@@ -1,0 +1,17 @@
+.project
+.pydevproject
+.pyc
+.settings/
+.log
+__pycache__/
+myenv
+*.exe
+*.pyc
+.idea
+build/
+pynta.egg-info
+dist/
+venv/
+*.egg-info/
+_build/
+.ipynb_checkpoints/

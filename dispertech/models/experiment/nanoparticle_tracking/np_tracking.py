@@ -1,6 +1,9 @@
 import importlib
+import time
 from multiprocessing import Queue, Event
 
+from dispertech.models.electronics.arduino import ArduinoModel
+from dispertech.models.experiment.nanoparticle_tracking.decorators import make_async_thread
 from dispertech.models.experiment.nanoparticle_tracking.localization import LocateParticles
 from experimentor.lib.log import get_logger
 from experimentor.models.experiments.base_experiment import BaseExperiment
@@ -19,9 +22,10 @@ class NPTracking(BaseExperiment):
         self.acquiring = False
         self.tracking = False
         self.cameras = [None, None]  # This will hold the models for the two cameras
-        self.temp_acquire_image = None
-        self.temp_align_image = None
+        self.daq = None
+        self.temp_image = [None, None]
         self.stream_saving_running = False
+        self.free_run_running = [False, False]
 
         self.link_process_running = False
         self.last_index = 0  # Last index used for storing to the movie buffer
@@ -43,7 +47,7 @@ class NPTracking(BaseExperiment):
         self.keep_locating = True
         self._threads = []
         self._processes = []
-        self._stop_free_run = Event()
+        self._stop_free_run = [Event(), Event()]
 
         self.location = LocateParticles(self.publisher, self.config['tracking'])
         self.fps = 0  # Calculates frames per second based on the number of frames received in a period of time
@@ -123,10 +127,22 @@ class NPTracking(BaseExperiment):
         self.cameras[0] = self.initialize_camera(camera_fiber, self.config['camera_fiber'])
         self.cameras[1] = self.initialize_camera(camera_microscope, self.config['camera_microscope'])
 
-    def set_config(self, config_values: dict):
-        pass
+    def load_electronics(self):
+        """ Loads the electronics controller. It is an Arduino microcontroller with extra build-in electronics to
+        control the movement of a mirror mounted on Piezos.
+        """
+        self.daq = ArduinoModel(self.config['arduino']['port'])
 
-    def move_mirror(self, direction: int, speed: int):
+    def set_config(self, config_values: dict):
+        self.config.update(config_values)
+
+    def move_mirror(self, speed: int, direction: int, axis: int):
+        self.daq.move_mirror(direction, speed, axis)
+
+    def home_mirror(self):
+        """ Routine to find the center position of the mirror. In principle should run only once in a while, one
+        the user things the mirror may be completly off-range.
+        """
         pass
 
     def acquire_image(self):
@@ -152,3 +168,64 @@ class NPTracking(BaseExperiment):
 
     def measure_electronics_temperature(self):
         pass
+
+    @make_async_thread
+    def snap(self, cam: int):
+        """ Snap a single frame.
+        """
+        self.logger.info(f'Snapping a picture with camera {int}')
+        camera = self.cameras[cam]
+        if cam == 0:
+            config = self.config['camera_fiber']
+        else:
+            config = self.config['camera_microscope']
+        camera.configure(config)
+        camera.set_acquisition_mode(self.camera.MODE_SINGLE_SHOT)
+        camera.trigger_camera()
+        data = camera.read_camera()[-1]
+        self.publisher.publish('snap', data)
+        self.temp_image[cam] = data
+        self.logger.debug('Got an image of {}x{} pixels'.format(data.shape[0], data.shape[1]))
+
+    @make_async_thread
+    def start_free_run(self, cam: int):
+        """ Starts continuous acquisition from the camera, but it is not being saved. This method is the workhorse
+        of the program. While this method runs on its own thread, it will broadcast the images to be consumed by other
+        methods. In this way it is possible to continuously save to hard drive, track particles, etc.
+        """
+        self.logger.info(f'Starting a free run acquisition of camera {cam}')
+        first = True
+        i = 0  # Used to keep track of the number of frames
+        camera = self.cameras[cam]
+        if cam == 0:
+            config = self.config['camera_fiber']
+        else:
+            config = self.config['camera_microscope']
+        camera.configure(config)
+        self._stop_free_run[cam].clear()
+        t0 = time.time()
+        self.free_run_running[cam] = True
+        self.logger.debug('First frame of a free_run')
+        camera.set_acquisition_mode(camera.MODE_CONTINUOUS)
+        camera.trigger_camera()  # Triggers the camera only once
+        while not self._stop_free_run[cam].is_set():
+            data = camera.read_camera()
+            if not data:
+                continue
+            self.logger.debug('Got {} new frames'.format(len(data)))
+            for img in data:
+                i += 1
+                self.logger.debug('Number of frames: {}'.format(i))
+                # This will broadcast the data just acquired with the current timestamp
+                # The timestamp is very unreliable, especially if the camera has a frame grabber.
+                self.publisher.publish('free_run', [time.time(), img])
+                self.temp_image = img
+            self.fps = round(i / (time.time() - t0))
+        self.free_run_running[cam] = False
+        camera.stopAcq()
+
+    def stop_free_run(self, cam: int):
+        self.logger.info(f'Setting the stop_event of camera {cam}')
+        self._stop_free_run[cam].set()
+
+

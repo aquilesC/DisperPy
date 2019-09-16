@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 import logging
 from PyQt5.QtWidgets import QApplication
 
-from dispertech.model.experiment.nanoparticle_tracking.np_tracking import NPTracking
+from dispertech.models.experiment.nanoparticle_tracking.np_tracking import NPTracking
 from dispertech.util.log import get_logger
 from dispertech.view.start_window import StartWindow
 

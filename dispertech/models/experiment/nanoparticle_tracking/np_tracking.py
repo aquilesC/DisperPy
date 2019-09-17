@@ -1,10 +1,20 @@
 import importlib
+import json
+import os
+from datetime import datetime
+
+import h5py
+import numpy as np
 import time
-from multiprocessing import Queue, Event
+from multiprocessing import Queue, Event, Process
 
 from dispertech.models.electronics.arduino import ArduinoModel
+from dispertech.models.experiment.nanoparticle_tracking import NO_CORRECTION
 from dispertech.models.experiment.nanoparticle_tracking.decorators import make_async_thread
-from dispertech.models.experiment.nanoparticle_tracking.localization import LocateParticles
+from dispertech.models.experiment.nanoparticle_tracking.exceptions import StreamSavingRunning
+from dispertech.models.experiment.nanoparticle_tracking.localization import LocateParticles, link_queue
+from dispertech.models.experiment.nanoparticle_tracking.saver import worker_listener
+from experimentor import general_stop_event
 from experimentor.lib.log import get_logger
 from experimentor.models.experiments.base_experiment import BaseExperiment
 
@@ -12,6 +22,7 @@ from experimentor.models.experiments.base_experiment import BaseExperiment
 class NPTracking(BaseExperiment):
     def __init__(self, filename=None):
         super().__init__(filename)
+        self.save_stream_running = False
         self.align_camera_running = False
         self.acquire_camera_running = False
         self.saving_location = None
@@ -35,7 +46,7 @@ class NPTracking(BaseExperiment):
         self.link_particles_process = None
         self.calculate_histogram_process = None
         self.do_background_correction = False
-        self.background_method = self.BACKGROUND_SINGLE_SNAP
+        self.background_method = NO_CORRECTION
         self.last_locations = None
 
         self.waterfall_index = 0
@@ -157,8 +168,27 @@ class NPTracking(BaseExperiment):
     def acquire_data(self):
         pass
 
-    def save_data(self):
-        pass
+    def save_data(self, cam: int):
+        """ Saves the last acquired image. The file to which it is going to be saved is defined in the config.
+        """
+        if self.temp_image[cam]:
+            self.logger.info(f'Saving last acquired image of Camera {cam}')
+            # Data will be appended to existing file
+            file_name = self.config['saving']['filename_photo'] + '.hdf5'
+            file_dir = self.config['saving']['directory']
+            if not os.path.exists(file_dir):
+                os.makedirs(file_dir)
+                self.logger.debug('Created directory {}'.format(file_dir))
+
+            with h5py.File(os.path.join(file_dir, file_name), "a") as f:
+                now = str(datetime.now())
+                g = f.create_group(now)
+                g.create_dataset('image', data=self.temp_image)
+                g.create_dataset('metadata', data=json.dumps(self.config))
+                f.flush()
+            self.logger.debug('Saved image to {}'.format(os.path.join(file_dir, file_name)))
+        else:
+            self.logger.warning('Tried to save an image, but no image was acquired yet.')
 
     def save_image(self):
         pass
@@ -194,7 +224,6 @@ class NPTracking(BaseExperiment):
         methods. In this way it is possible to continuously save to hard drive, track particles, etc.
         """
         self.logger.info(f'Starting a free run acquisition of camera {cam}')
-        first = True
         i = 0  # Used to keep track of the number of frames
         camera = self.cameras[cam]
         if cam == 0:
@@ -222,10 +251,128 @@ class NPTracking(BaseExperiment):
                 self.temp_image = img
             self.fps = round(i / (time.time() - t0))
         self.free_run_running[cam] = False
-        camera.stopAcq()
+        camera.stop_acquisition()
 
     def stop_free_run(self, cam: int):
         self.logger.info(f'Setting the stop_event of camera {cam}')
         self._stop_free_run[cam].set()
 
+    def save_stream(self):
+        """ Saves the queue to a file continuously. This is an async function, that can be triggered before starting
+        the stream. It relies on the multiprocess library. It uses a queue in order to get the data to be saved.
+        In normal operation, it should be used together with ``add_to_stream_queue``.
+        """
+        if self.save_stream_running:
+            self.logger.warning('Tried to start a new instance of save stream')
+            raise StreamSavingRunning('You tried to start a new process for stream saving')
 
+        self.logger.info('Starting to save the stream')
+        file_name = self.config['saving']['filename_video'] + '.hdf5'
+        file_dir = self.config['saving']['directory']
+        if not os.path.exists(file_dir):
+            os.makedirs(file_dir)
+            self.logger.debug('Created directory {}'.format(file_dir))
+        file_path = os.path.join(file_dir, file_name)
+        max_memory = self.config['saving']['max_memory']
+
+        self.stream_saving_process = Process(target=worker_listener,
+                                             args=(file_path, json.dumps(self.config), 'free_run'),
+                                             kwargs={'max_memory': max_memory})
+        self.stream_saving_process.start()
+        self.logger.debug('Started the stream saving process')
+
+    def link_particles(self):
+        """ Starts linking the particles while the acquisition is in progress.
+        """
+        self.logger.info('Starting to link particles')
+        self.link_particles_process = Process(target=link_queue, args=[self.locations_queue, self.publisher._queue,
+                                                                       self.tracks_queue],
+                                              kwargs=self.config['tracking']['link'])
+        self.link_particles_process.start()
+        self.logger.debug('Started the linking process')
+
+    def stop_save_stream(self):
+        """ Stops saving the stream.
+        """
+        if self.save_stream_running:
+            self.logger.info('Stopping the saving stream process')
+            self.saver_queue.put('Exit')
+            self.publisher.publish('free_run', 'stop')
+            return
+        self.logger.info('The saving stream is not running. Nothing will be done.')
+
+    def start_tracking(self):
+        """ Starts the tracking of the particles
+        """
+        self.tracking = True
+        self.location.start_tracking('free_run')
+
+    def stop_tracking(self):
+        self.tracking = False
+        self.location.stop_tracking()
+
+    def start_saving_location(self):
+        self.saving_location = True
+        file_name = self.config['saving']['filename_tracks'] + '.hdf5'
+        file_dir = self.config['saving']['directory']
+        if not os.path.exists(file_dir):
+            os.makedirs(file_dir)
+            self.logger.debug('Created directory {}'.format(file_dir))
+        file_path = os.path.join(file_dir, file_name)
+        self.location.start_saving(file_path, json.dumps(self.config))
+
+    def stop_saving_location(self):
+        self.saving_location = False
+        self.location.stop_saving()
+
+    def empty_saver_queue(self):
+        """ Empties the queue where the data from the movie is being stored.
+        """
+        if not self.saver_queue.empty():
+            self.logger.info('Clearing the saver queue')
+            self.logger.debug('Current saver queue length: {}'.format(self.saver_queue.qsize()))
+            while not self.saver_queue.empty() or self.saver_queue.qsize() > 0:
+                self.saver_queue.get()
+            self.logger.debug('Saver queue cleared')
+
+    def empty_locations_queue(self):
+        """ Empties the queue with location data.
+        """
+        if not self.locations_queue.empty():
+            self.logger.info('Location queue not empty. Cleaning.')
+            self.logger.debug('Current location queue length: {}'.format(self.locations_queue.qsize()))
+            while not self.locations_queue.empty():
+                self.locations_queue.get()
+            self.logger.debug('Location queue cleared')
+
+    def calculate_waterfall(self, image):
+        """ A waterfall is the product of summing together all the vertical values of an image and displaying them
+        as lines on a 2D image. It is how spectrometers normally work. A waterfall can be produced either by binning the
+        image in the vertical direction directly at the camera, or by doing it in software.
+        The first has the advantage of speeding up the readout process. The latter has the advantage of working with any
+        camera.
+        This method will work either with 1D arrays or with 2D arrays and will generate a stack of lines.
+        """
+
+        if self.waterfall_index == self.config['waterfall']['length_waterfall']:
+            self.waterfall_data = np.zeros((self.config['waterfall']['length_waterfall'], self.camera.width))
+            self.waterfall_index = 0
+
+        center_pixel = np.int(self.camera.height / 2)   # Calculates the center of the image
+        vbinhalf = np.int(self.config['waterfall']['vertical_bin'])
+        if vbinhalf >= self.current_height / 2 - 1:
+            wf = np.array([np.sum(image, 1)])
+        else:
+            wf = np.array([np.sum(image[:, center_pixel - vbinhalf:center_pixel + vbinhalf], 1)])
+        self.waterfall_data[self.waterfall_index, :] = wf
+        self.waterfall_index += 1
+        self.publisher.publish('waterfall_data', wf)
+
+    def finalize(self):
+        general_stop_event.set()
+        self.stop_free_run(cam=0)
+        self.stop_free_run(cam=1)
+        time.sleep(.5)
+        self.stop_save_stream()
+        self.location.finalize()
+        super().finalize()

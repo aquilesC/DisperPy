@@ -157,6 +157,9 @@ void loop() {
       float humidity = dht.readHumidity();
       Serial.println(humidity);
     }
+    else if (Comm.startsWith("IDN")){
+      Serial.println("Dispertech device 1.0");
+      }
     delay(1);
     Comm = "";
   }

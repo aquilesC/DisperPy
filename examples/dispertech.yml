@@ -34,9 +34,9 @@ camera_fiber:
   fps: 30  # Frames per second, should either be defined by the camera or within the model based on timing
   binning_x: 1 # Binning
   binning_y: 1
-  roi_x1: 0
+  roi_x1: 1
   roi_x2: 1280
-  roi_y1: 0
+  roi_y1: 1
   roi_y2: 960
   background: '' # Full path to background file, or empty for none.
   background_method: [Method1, Method2]
@@ -50,9 +50,9 @@ camera_microscope:
   fps: 30  # Frames per second, should either be defined by the camera or within the model based on timing
   binning_x: 1 # Binning
   binning_y: 1
-  roi_x1: 0
+  roi_x1: 1
   roi_x2: 1920
-  roi_y1: 0
+  roi_y1: 1
   roi_y2: 1200
   background: '' # Full path to background file, or empty for none.
   background_method: [Method1, Method2]

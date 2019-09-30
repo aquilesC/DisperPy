@@ -36,7 +36,7 @@ setup(
                       'pyzmq',
                       'numba',
                       'pyvisa',
-                      'pyvisa-py'
+                      'pyvisa-py', 'experimentor'
                       ],
     long_description=long_description,
     long_description_content_type="text/markdown",

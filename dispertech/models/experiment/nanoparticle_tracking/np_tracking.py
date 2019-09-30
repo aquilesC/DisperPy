@@ -12,11 +12,14 @@ from dispertech.models.electronics.arduino import ArduinoModel
 from dispertech.models.experiment.nanoparticle_tracking import NO_CORRECTION
 from dispertech.models.experiment.nanoparticle_tracking.decorators import make_async_thread
 from dispertech.models.experiment.nanoparticle_tracking.exceptions import StreamSavingRunning
-from dispertech.models.experiment.nanoparticle_tracking.localization import LocateParticles, link_queue
+from dispertech.models.experiment.nanoparticle_tracking.localization import calculate_locations_image
 from dispertech.models.experiment.nanoparticle_tracking.saver import worker_listener
 from experimentor import general_stop_event
+from experimentor.config.settings import SUBSCRIBER_EXIT_KEYWORD
 from experimentor.lib.log import get_logger
 from experimentor.models.experiments.base_experiment import BaseExperiment
+from experimentor.models.listener import Listener
+from experimentor.models.subscriber import Subscriber
 
 
 class NPTracking(BaseExperiment):
@@ -33,7 +36,7 @@ class NPTracking(BaseExperiment):
         self.acquiring = False
         self.tracking = False
         self.cameras = [None, None]  # This will hold the models for the two cameras
-        self.daq = None
+        self.electronics = None
         self.temp_image = [None, None]
         self.stream_saving_running = False
         self.free_run_running = [False, False]
@@ -60,9 +63,9 @@ class NPTracking(BaseExperiment):
         self._processes = []
         self._stop_free_run = [Event(), Event()]
 
-        self.location = LocateParticles(self.publisher, self.config['tracking'])
         self.fps = 0  # Calculates frames per second based on the number of frames received in a period of time
-        # sys.excepthook = self.sysexcept  # This is very handy in case there are exceptions that force the program to quit.
+
+        self.listener = Listener()
 
     def configure_database(self):
         pass
@@ -89,8 +92,8 @@ class NPTracking(BaseExperiment):
         """
         self.logger.info('Importing camera model {}'.format(camera))
         try:
-            self.logger.debug('experimentor.models.cameras.' + camera)
-            camera_model_to_import = 'experimentor.models.cameras.' + camera
+            self.logger.debug('dispertech.models.cameras.' + camera)
+            camera_model_to_import = 'dispertech.models.cameras.' + camera
             cam_module = importlib.import_module(camera_model_to_import)
         except ModuleNotFoundError:
             try:
@@ -142,13 +145,13 @@ class NPTracking(BaseExperiment):
         """ Loads the electronics controller. It is an Arduino microcontroller with extra build-in electronics to
         control the movement of a mirror mounted on Piezos.
         """
-        self.daq = ArduinoModel(self.config['arduino']['port'])
+        self.electronics = ArduinoModel()
 
     def set_config(self, config_values: dict):
         self.config.update(config_values)
 
     def move_mirror(self, speed: int, direction: int, axis: int):
-        self.daq.move_mirror(direction, speed, axis)
+        self.electronics.move_mirror(direction, speed, axis)
 
     def home_mirror(self):
         """ Routine to find the center position of the mirror. In principle should run only once in a while, one
@@ -217,7 +220,6 @@ class NPTracking(BaseExperiment):
         self.temp_image[cam] = data
         self.logger.debug('Got an image of {}x{} pixels'.format(data.shape[0], data.shape[1]))
 
-    @make_async_thread
     def start_free_run(self, cam: int):
         """ Starts continuous acquisition from the camera, but it is not being saved. This method is the workhorse
         of the program. While this method runs on its own thread, it will broadcast the images to be consumed by other
@@ -231,31 +233,13 @@ class NPTracking(BaseExperiment):
         else:
             config = self.config['camera_microscope']
         camera.configure(config)
-        self._stop_free_run[cam].clear()
-        t0 = time.time()
-        self.free_run_running[cam] = True
-        self.logger.debug('First frame of a free_run')
-        camera.set_acquisition_mode(camera.MODE_CONTINUOUS)
-        camera.trigger_camera()  # Triggers the camera only once
-        while not self._stop_free_run[cam].is_set():
-            data = camera.read_camera()
-            if not data:
-                continue
-            self.logger.debug('Got {} new frames'.format(len(data)))
-            for img in data:
-                i += 1
-                self.logger.debug('Number of frames: {}'.format(i))
-                # This will broadcast the data just acquired with the current timestamp
-                # The timestamp is very unreliable, especially if the camera has a frame grabber.
-                self.publisher.publish('free_run', [time.time(), img])
-                self.temp_image = img
-            self.fps = round(i / (time.time() - t0))
-        self.free_run_running[cam] = False
-        camera.stop_acquisition()
+        camera._stop_free_run.clear()
+        camera.start_free_run()
+        self.logger.debug(f'Started free run of camera {camera}')
 
     def stop_free_run(self, cam: int):
         self.logger.info(f'Setting the stop_event of camera {cam}')
-        self._stop_free_run[cam].set()
+        self.cameras[cam].stop_free_run()
 
     def save_stream(self):
         """ Saves the queue to a file continuously. This is an async function, that can be triggered before starting
@@ -281,16 +265,6 @@ class NPTracking(BaseExperiment):
         self.stream_saving_process.start()
         self.logger.debug('Started the stream saving process')
 
-    def link_particles(self):
-        """ Starts linking the particles while the acquisition is in progress.
-        """
-        self.logger.info('Starting to link particles')
-        self.link_particles_process = Process(target=link_queue, args=[self.locations_queue, self.publisher._queue,
-                                                                       self.tracks_queue],
-                                              kwargs=self.config['tracking']['link'])
-        self.link_particles_process.start()
-        self.logger.debug('Started the linking process')
-
     def stop_save_stream(self):
         """ Stops saving the stream.
         """
@@ -305,11 +279,18 @@ class NPTracking(BaseExperiment):
         """ Starts the tracking of the particles
         """
         self.tracking = True
-        self.location.start_tracking('free_run')
+        id = self.cameras[1].id
+        self.logger.debug('Calculating positions with trackpy')
+        self.localize = Subscriber(calculate_locations_image, f"{id}_free_run", "locations", [], {'diameter': 11})
+        self.localize.start()
+        self.dummy = Subscriber(print_location, "locations", None, [], {})
+        self.dummy.start()
+
 
     def stop_tracking(self):
+        id = self.cameras[1].id
+        self.listener.publish(SUBSCRIBER_EXIT_KEYWORD, f"{id}_free_run")
         self.tracking = False
-        self.location.stop_tracking()
 
     def start_saving_location(self):
         self.saving_location = True
@@ -374,5 +355,9 @@ class NPTracking(BaseExperiment):
         self.stop_free_run(cam=1)
         time.sleep(.5)
         self.stop_save_stream()
-        self.location.finalize()
+        self.electronics.finalize()
         super().finalize()
+
+
+def print_location(data):
+    print(data)

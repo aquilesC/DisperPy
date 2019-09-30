@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file>Icons/applications-accessories.png</file>
     <file>Icons/folder-open.png</file>
   </qresource>
 </RCC>

@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>1024</width>
-    <height>768</height>
+    <height>1070</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
@@ -24,8 +24,8 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>1024</width>
-    <height>768</height>
+    <width>4000</width>
+    <height>4000</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -38,161 +38,284 @@
    <bool>true</bool>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QHBoxLayout" name="horizontalLayout_7">
     <item>
-     <widget class="QLabel" name="label">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
+     <widget class="QWidget" name="widget_3" native="true">
+      <property name="maximumSize">
+       <size>
+        <width>450</width>
+        <height>16777215</height>
+       </size>
       </property>
-      <property name="font">
-       <font>
-        <pointsize>18</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Fiber end alignment monitoring</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QWidget" name="camera_widget" native="true">
-      <layout class="QHBoxLayout" name="horizontalLayout">
+      <layout class="QVBoxLayout" name="verticalLayout_6">
        <item>
-        <widget class="QSlider" name="speed_slider">
-         <property name="minimum">
-          <number>1</number>
+        <widget class="QLabel" name="label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
-         <property name="maximum">
-          <number>63</number>
+         <property name="font">
+          <font>
+           <pointsize>14</pointsize>
+          </font>
          </property>
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="tickPosition">
-          <enum>QSlider::TicksAbove</enum>
-         </property>
-         <property name="tickInterval">
-          <number>5</number>
+         <property name="text">
+          <string>Fiber alignment</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QWidget" name="arrows_widget" native="true">
-         <property name="minimumSize">
-          <size>
-           <width>100</width>
-           <height>100</height>
-          </size>
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="title">
+          <string>Motor</string>
          </property>
-         <property name="maximumSize">
-          <size>
-           <width>100</width>
-           <height>100</height>
-          </size>
-         </property>
-         <widget class="QPushButton" name="button_up">
-          <property name="geometry">
-           <rect>
-            <x>30</x>
-            <y>0</y>
-            <width>31</width>
-            <height>28</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset>
-            <normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_top.png</normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_top.png</iconset>
-          </property>
-         </widget>
-         <widget class="QPushButton" name="button_down">
-          <property name="geometry">
-           <rect>
-            <x>30</x>
-            <y>60</y>
-            <width>31</width>
-            <height>28</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset>
-            <normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_bottom.png</normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_bottom.png</iconset>
-          </property>
-         </widget>
-         <widget class="QPushButton" name="button_right">
-          <property name="geometry">
-           <rect>
-            <x>60</x>
-            <y>30</y>
-            <width>31</width>
-            <height>28</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset>
-            <normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_right.png</normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_right.png</iconset>
-          </property>
-         </widget>
-         <widget class="QPushButton" name="button_left">
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>30</y>
-            <width>31</width>
-            <height>28</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset>
-            <normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_left.png</normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_left.png</iconset>
-          </property>
-         </widget>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QSlider" name="speed_slider">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>30</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="tickPosition">
+             <enum>QSlider::TicksAbove</enum>
+            </property>
+            <property name="tickInterval">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="arrows_widget" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>100</width>
+              <height>100</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>100</width>
+              <height>100</height>
+             </size>
+            </property>
+            <widget class="QPushButton" name="button_up">
+             <property name="geometry">
+              <rect>
+               <x>30</x>
+               <y>0</y>
+               <width>31</width>
+               <height>28</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_top.png</normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_top.png</iconset>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="button_down">
+             <property name="geometry">
+              <rect>
+               <x>30</x>
+               <y>60</y>
+               <width>31</width>
+               <height>28</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_bottom.png</normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_bottom.png</iconset>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="button_right">
+             <property name="geometry">
+              <rect>
+               <x>60</x>
+               <y>30</y>
+               <width>31</width>
+               <height>28</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_right.png</normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_right.png</iconset>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="button_left">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>30</y>
+               <width>31</width>
+               <height>28</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_left.png</normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_left.png</iconset>
+             </property>
+            </widget>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
        <item>
-        <widget class="GraphicsLayoutWidget" name="widget" native="true"/>
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>Laser Power</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <widget class="QSlider" name="power_slider">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="tickPosition">
+             <enum>QSlider::TicksBelow</enum>
+            </property>
+            <property name="tickInterval">
+             <number>10</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="button_fiber_led">
+         <property name="text">
+          <string>Fiber LED</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="button_top_led">
+         <property name="text">
+          <string>Top LED</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_3">
+         <property name="title">
+          <string>Cameras</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <widget class="QWidget" name="widget" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout_6">
+             <item>
+              <widget class="QGroupBox" name="groupBox_5">
+               <property name="title">
+                <string>Microscope</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_4">
+                <item>
+                 <widget class="QGroupBox" name="groupBox_7">
+                  <property name="title">
+                   <string>Exposure (ms)</string>
+                  </property>
+                  <layout class="QHBoxLayout" name="horizontalLayout_5">
+                   <item>
+                    <widget class="QLineEdit" name="line_microscope_exposure"/>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QGroupBox" name="groupBox_4">
+               <property name="title">
+                <string>Fiber</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_3">
+                <item>
+                 <widget class="QGroupBox" name="groupBox_6">
+                  <property name="title">
+                   <string>Exposure (ms)</string>
+                  </property>
+                  <layout class="QHBoxLayout" name="horizontalLayout_4">
+                   <item>
+                    <widget class="QLineEdit" name="line_fiber_exposure"/>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="widget_2" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout_3">
+             <item>
+              <widget class="QPushButton" name="button_apply">
+               <property name="text">
+                <string>Apply</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="button_start">
+               <property name="text">
+                <string>Start</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="button_stop">
+               <property name="text">
+                <string>Stop</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </item>
       </layout>
      </widget>
     </item>
     <item>
-     <widget class="QSlider" name="power_slider">
-      <property name="minimum">
-       <number>1</number>
-      </property>
-      <property name="maximum">
-       <number>100</number>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="tickPosition">
-       <enum>QSlider::TicksBelow</enum>
-      </property>
-      <property name="tickInterval">
-       <number>10</number>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="button_fiber_led">
-      <property name="text">
-       <string>Fiber LED</string>
-      </property>
+     <widget class="QWidget" name="camera_widget" native="true">
+      <layout class="QHBoxLayout" name="horizontalLayout"/>
      </widget>
     </item>
    </layout>
@@ -227,14 +350,6 @@
    </property>
   </action>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>GraphicsLayoutWidget</class>
-   <extends>QWidget</extends>
-   <header>pyqtgraph</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

@@ -14,7 +14,7 @@ import logging, multiprocessing
 DEFAULT_FMT = "[%(levelname)8s] %(asctime)s %(name)s: %(message)s"
 
 
-def get_logger(name='pynta', level=logging.INFO):
+def get_logger(name='dispertech', level=logging.INFO):
     logger = multiprocessing.get_logger()
     logger.setLevel(level)
     return logger

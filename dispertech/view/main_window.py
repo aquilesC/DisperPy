@@ -1,5 +1,7 @@
 import os
 
+import numpy as np
+
 import dispertech.view.GUI.resources
 from PyQt5 import uic
 from PyQt5.QtCore import QTimer
@@ -7,6 +9,7 @@ from PyQt5.QtWidgets import QMainWindow, QVBoxLayout
 
 from dispertech.view import VIEW_BASE_DIR
 from dispertech.view.focusing_window import FocusingWindow
+from dispertech.view.tracking_config_window import TrackingConfig
 from experimentor import Q_
 from experimentor.views.camera.camera_viewer_widget import CameraViewerWidget
 
@@ -15,8 +18,8 @@ class MainWindow(QMainWindow):
     def __init__(self, experiment=None):
         super().__init__()
         uic.loadUi(os.path.join(VIEW_BASE_DIR, 'GUI', 'Main_Window.ui'), self)
-        self.focus_window = FocusingWindow(experiment)
-
+        # self.focus_window = FocusingWindow(experiment)
+        self.config_window = TrackingConfig(experiment.config['tracking'], parent=None)
 
         self.experiment = experiment
         self.fiber_led = 0
@@ -39,9 +42,10 @@ class MainWindow(QMainWindow):
         self.temperature_timer.timeout.connect(self.update_temperatures)
         self.temperature_timer.start(5000)
 
-        self.actionAlign_Tool.triggered.connect(self.focus_window.show)
+        # self.actionAlign_Tool.triggered.connect(self.focus_window.show)
         self.action_set_roi.triggered.connect(self.set_roi)
         self.action_start_tracking.triggered.connect(self.experiment.start_tracking)
+        self.action_tracking_config.triggered.connect(self.config_window.show)
 
         self.camera_widget.setup_roi_lines([
             self.experiment.cameras[1].max_width,
@@ -74,6 +78,8 @@ class MainWindow(QMainWindow):
     def update_image(self):
         image = self.experiment.cameras[1].temp_image
         if not image is None:
+            if image.shape[2] > 1:
+                image = np.sum(image, axis=2)
             self.camera_widget.update_image(image)
 
     def update_temperatures(self):
@@ -85,9 +91,8 @@ class MainWindow(QMainWindow):
         values = self.camera_widget.get_roi_values()
         X = values[0]
         Y = values[1]
-        self.experiment.cameras[1].stop_free_run()
         new_values = self.experiment.cameras[1].set_ROI(X, Y)
-        print(new_values)
+        self.camera_widget.set_roi_lines(new_values[0], new_values[1])
         self.experiment.cameras[1].start_free_run()
 
     def update_camera_settings(self):
@@ -96,3 +101,9 @@ class MainWindow(QMainWindow):
         new_exposure = self.experiment.cameras[1].set_exposure(exposure)
         self.line_exposure.setText(str(new_exposure.m_as('ms')))
         self.experiment.cameras[1].start_free_run()
+
+    def toggle_tracking(self):
+        if self.experiment.tracking:
+            self.experiment.stop_tracking()
+        else:
+            self.experiment.start_tracking()

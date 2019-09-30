@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1608</width>
-    <height>1363</height>
+    <height>1440</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -243,8 +243,7 @@
     <property name="title">
      <string>&amp;Config</string>
     </property>
-    <addaction name="action_Load_Config"/>
-    <addaction name="action_Save_Config"/>
+    <addaction name="action_tracking_config"/>
    </widget>
    <widget class="QMenu" name="menu_Data">
     <property name="title">
@@ -327,11 +326,23 @@
    </property>
   </action>
   <action name="action_start_tracking">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/Icons/duotone_chart.svg</normaloff>:/icons/Icons/duotone_chart.svg</iconset>
+   </property>
    <property name="text">
     <string>Start Tracking</string>
    </property>
    <property name="toolTip">
     <string>Start Tracking</string>
+   </property>
+  </action>
+  <action name="action_tracking_config">
+   <property name="text">
+    <string>Tracking Config</string>
+   </property>
+   <property name="toolTip">
+    <string>Configure Tracking Parameters</string>
    </property>
   </action>
  </widget>

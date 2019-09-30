@@ -133,9 +133,9 @@ class NPTracking(BaseExperiment):
         which cameras[0] is the camera to look at the end of the fiber and cameras[1] is the camera used in the
         microscope.
         """
-        camera_fiber = self.load_camera(self.config['camera_fiber']['model'])
+        # camera_fiber = self.load_camera(self.config['camera_fiber']['model'])
         camera_microscope = self.load_camera(self.config['camera_microscope']['model'])
-        self.cameras[0] = self.initialize_camera(camera_fiber, self.config['camera_fiber'])
+        # self.cameras[0] = self.initialize_camera(camera_fiber, self.config['camera_fiber'])
         self.cameras[1] = self.initialize_camera(camera_microscope, self.config['camera_microscope'])
 
     def load_electronics(self):
@@ -275,6 +275,9 @@ class NPTracking(BaseExperiment):
     def start_tracking(self):
         """ Starts the tracking of the particles
         """
+        if self.tracking:
+            self.logger.warning("Tracking already running")
+            return
         self.tracking = True
         id = self.cameras[1].id
         self.logger.debug('Calculating positions with trackpy')
@@ -282,6 +285,7 @@ class NPTracking(BaseExperiment):
         self.localize.start()
 
     def stop_tracking(self):
+        print('Stop_tracking')
         id = self.cameras[1].id
         self.listener.publish(SUBSCRIBER_EXIT_KEYWORD, f"{id}_free_run")
         self.tracking = False
@@ -345,9 +349,18 @@ class NPTracking(BaseExperiment):
 
     def finalize(self):
         general_stop_event.set()
-        self.stop_free_run(cam=0)
-        self.stop_free_run(cam=1)
+        try:
+            self.stop_free_run(cam=0)
+        except Exception as e:
+            self.logger.error(e)
+        try:
+            self.stop_free_run(cam=1)
+        except Exception as e:
+            self.logger.error(e)
         time.sleep(.5)
         self.stop_save_stream()
-        self.electronics.finalize()
+        try:
+            self.electronics.finalize()
+        except Exception as e:
+            self.logger.error(e)
         super().finalize()

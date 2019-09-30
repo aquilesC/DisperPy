@@ -26,8 +26,11 @@ class ArduinoModel:
         self.temp_electronics = 0
         self.temp_sample = 0
         self.query_lock = RLock()
+        self.driver = None
+        self.port = port
 
-        if not port:
+    def initialize(self):
+        if not self.port:
             port = Arduino.list_devices()[0]
         self.driver = rm.open_resource(port, baud_rate=19200)
         sleep(2)

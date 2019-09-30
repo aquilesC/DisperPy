@@ -104,7 +104,7 @@ class Camera(BaseCamera):
 
         self.camera.AcquisitionStart.Execute()
 
-    def set_ROI(self, X: Tuple[int, int], Y: Tuple[int, int]) -> Tuple[int, int]:
+    def set_ROI(self, X: Tuple[int, int], Y: Tuple[int, int]) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         """ Set up the region of interest of the camera. Basler calls this the
         Area of Interest (AOI) in their manuals. Beware that not all cameras allow
         to set the ROI (especially if they are not area sensors).
@@ -115,12 +115,16 @@ class Camera(BaseCamera):
             :mod:`Base Camera <pynta.model.cameras.base_camera>`
             To select, for example, the first 100 horizontal pixels, you would supply the following: (0, 99)
         :param tuple Y: Vertical limits for the pixels.
-
         """
+        self._stop_free_run.set()
+        while self.free_run_running:
+            self.logger.info('Changing ROI while free running')
+            sleep(0.002)
         width = abs(X[1]-X[0])+1
         width = int(width-width%4)
         x_pos = int(X[0]-X[0]%4)
         height = int(abs(Y[1]-Y[0])+1)
+        height = int(height-height%2)
         y_pos = int(Y[0]-Y[0]%2)
         self.logger.info(f'Updating ROI: (x, y, width, height) = ({x_pos}, {y_pos}, {width}, {height})')
         # if x_pos+width-1 > self.max_width:
@@ -142,7 +146,7 @@ class Camera(BaseCamera):
         self.Y = (y_pos, y_pos+width)
         self.width = self.camera.Width.Value
         self.height = self.camera.Height.Value
-        return self.width, self.height
+        return self.X, self.Y
 
     def clear_ROI(self):
         """ Resets the ROI to the maximum area of the camera"""
@@ -195,10 +199,10 @@ class Camera(BaseCamera):
                 img = [None] * num_buffers
                 for i in range(num_buffers):
                     grab = self.camera.RetrieveResult(int(self.exposure.m_as('ms')) + 10, pylon.TimeoutHandling_Return)
-                    if grab:
-                        img[i] = grab.Array
+                    if grab.GrabSucceeded():
+                        img[i] = grab.GetArray()
                         grab.Release()
-        return [i.T for i in img]  # Transpose to have the correct size
+        return [i.T for i in img if i is not None]  # Transpose to have the correct size
 
     @make_async_thread
     def start_free_run(self):
@@ -217,22 +221,27 @@ class Camera(BaseCamera):
         self.logger.debug('First frame of a free_run')
         self.set_acquisition_mode(self.MODE_CONTINUOUS)
         self.trigger_camera()  # Triggers the camera only once
-        while not self._stop_free_run.is_set():
-            data = self.read_camera()
-            if not data:
-                continue
-            self.logger.debug('Got {} new frames'.format(len(data)))
-            img = None
-            for img in data:
-                i += 1
-                self.logger.debug('Number of frames: {}'.format(i))
-                # This will broadcast the data just acquired with the current timestamp
-                # The timestamp is very unreliable, especially if the camera has a frame grabber.
-                # self.publisher.publish('free_run', [time.time(), img])
-                self.listener.publish(img, f'{self.id}_free_run')
-            self.fps = round(i / (time.time() - t0))
-            sleep(0.010)
-            self.temp_image = img
+        try:
+            while not self._stop_free_run.is_set():
+                data = self.read_camera()
+                if not data:
+                    continue
+                self.logger.debug('Got {} new frames'.format(len(data)))
+                img = None
+                for img in data:
+                    i += 1
+                    self.logger.debug('Number of frames: {}'.format(i))
+                    # This will broadcast the data just acquired with the current timestamp
+                    # The timestamp is very unreliable, especially if the camera has a frame grabber.
+                    # self.publisher.publish('free_run', [time.time(), img])
+                    self.listener.publish(img, f'{self.id}_free_run')
+                self.fps = round(i / (time.time() - t0))
+                sleep(0.010)
+                self.temp_image = img
+        except Exception as e:
+            self.free_run_running = False
+            self.stop_camera()
+            raise
         self.free_run_running = False
         self.stop_camera()
 

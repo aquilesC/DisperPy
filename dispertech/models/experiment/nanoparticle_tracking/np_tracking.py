@@ -29,7 +29,6 @@ class NPTracking(BaseExperiment):
         self.align_camera_running = False
         self.acquire_camera_running = False
         self.saving_location = None
-        self.logger = get_logger(name=__name__)
 
         self.dropped_frames = 0
         self.keep_acquiring = True
@@ -64,8 +63,6 @@ class NPTracking(BaseExperiment):
         self._stop_free_run = [Event(), Event()]
 
         self.fps = 0  # Calculates frames per second based on the number of frames received in a period of time
-
-        self.listener = Listener()
 
     def configure_database(self):
         pass
@@ -283,9 +280,6 @@ class NPTracking(BaseExperiment):
         self.logger.debug('Calculating positions with trackpy')
         self.localize = Subscriber(calculate_locations_image, f"{id}_free_run", "locations", [], {'diameter': 11})
         self.localize.start()
-        self.dummy = Subscriber(print_location, "locations", None, [], {})
-        self.dummy.start()
-
 
     def stop_tracking(self):
         id = self.cameras[1].id
@@ -357,7 +351,3 @@ class NPTracking(BaseExperiment):
         self.stop_save_stream()
         self.electronics.finalize()
         super().finalize()
-
-
-def print_location(data):
-    print(data)

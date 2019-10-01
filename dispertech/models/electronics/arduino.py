@@ -11,6 +11,7 @@ import pyvisa
 from pyvisa import VisaIOError
 
 from dispertech.models.experiment.nanoparticle_tracking.decorators import make_async_thread
+from experimentor.lib.log import get_logger
 
 rm = pyvisa.ResourceManager('@py')
 
@@ -28,6 +29,8 @@ class ArduinoModel:
         self.query_lock = RLock()
         self.driver = None
         self.port = port
+
+        self.logger = get_logger()
 
     def initialize(self):
         if not self.port:
@@ -109,6 +112,7 @@ class ArduinoModel:
             self.driver.query(f"mot{axis}")
             self.driver.write_raw(bytestring)
             ans = self.driver.read()
+        self.logger.info('Finished moving')
 
     @make_async_thread
     def monitor_temperature(self):

@@ -8,12 +8,10 @@ from experimentor.lib.log import log_to_screen, get_logger
 
 
 logger = get_logger(level=logging.DEBUG)
-handler = log_to_screen()
+handler = log_to_screen(level=logging.DEBUG)
 experiment = NPTracking('dispertech.yml')
 experiment.load_cameras()
 experiment.load_electronics()
-experiment.start_free_run(0)
-experiment.start_free_run(1)
 experiment.electronics.monitor_temperature()
 app = QApplication([])
 fw = MainWindow(experiment=experiment)

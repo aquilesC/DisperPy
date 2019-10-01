@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1608</width>
-    <height>1440</height>
+    <height>1443</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -179,12 +179,12 @@
              <string>Gain</string>
             </property>
             <property name="buddy">
-             <cstring>lineEdit_2</cstring>
+             <cstring>line_gain</cstring>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="lineEdit_2"/>
+           <widget class="QLineEdit" name="line_gain"/>
           </item>
           <item>
            <widget class="QPushButton" name="button_camera_apply">

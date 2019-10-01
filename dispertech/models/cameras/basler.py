@@ -27,8 +27,6 @@ from experimentor import Q_
 from experimentor.models.listener import Listener
 
 
-
-
 class Camera(BaseCamera):
     def __init__(self, camera):
         super().__init__(camera)
@@ -47,6 +45,9 @@ class Camera(BaseCamera):
         self.temp_image = None
         self.listener = Listener()
         self.fps = 0
+        self.i = 0  # Number of frames acquired
+        self.gain = 0
+        self.exposure = 0
 
     def initialize(self):
         """ Initializes the communication with the camera. Get's the maximum and minimum width. It also forces
@@ -90,6 +91,7 @@ class Camera(BaseCamera):
         self.set_acquisition_mode(self.MODE_SINGLE_SHOT)
         self.clear_ROI()
         self.exposure = self.get_exposure()
+        self.gain = self.get_gain()
 
     def set_acquisition_mode(self, mode):
         self.logger.info(f'Setting acquisition mode to {mode}')
@@ -103,6 +105,16 @@ class Camera(BaseCamera):
             self.mode = mode
 
         self.camera.AcquisitionStart.Execute()
+
+    def auto_exposure(self):
+        self.camera.ExposureAuto.SetValue('Off')
+        self.camera.ExposureAuto.SetValue('Once')
+        self.get_exposure()
+
+    def auto_gain(self):
+        self.camera.GainAuto.SetValue('Off')
+        self.camera.GainAuto.SetValue('Once')
+        self.get_gain()
 
     def set_ROI(self, X: Tuple[int, int], Y: Tuple[int, int]) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         """ Set up the region of interest of the camera. Basler calls this the
@@ -174,6 +186,14 @@ class Camera(BaseCamera):
                 self.camera.StartGrabbing(1)
         self.camera.ExecuteSoftwareTrigger()
 
+    def set_gain(self, gain: float) -> float:
+        self.camera.Gain.SetValue(gain)
+        return self.get_gain()
+
+    def get_gain(self) -> float:
+        self.gain = float(self.camera.Gain.Value)
+        return self.gain
+
     def set_exposure(self, exposure: Q_) -> Q_:
         self.camera.ExposureTime.SetValue(exposure.m_as('us'))
         return self.get_exposure()
@@ -194,12 +214,12 @@ class Camera(BaseCamera):
         else:
             img = []
             num_buffers = self.camera.NumReadyBuffers.Value
-            self.logger.debug(f'{self.camera.NumQueuedBuffers.Value} frames available')
+            self.logger.debug(f'{self.camera.NumReadyBuffers.Value} frames available')
             if num_buffers:
                 img = [None] * num_buffers
                 for i in range(num_buffers):
-                    grab = self.camera.RetrieveResult(int(self.exposure.m_as('ms')) + 10, pylon.TimeoutHandling_Return)
-                    if grab.GrabSucceeded():
+                    grab = self.camera.RetrieveResult(int(self.exposure.m_as('ms')), pylon.TimeoutHandling_Return)
+                    if grab and grab.GrabSucceeded():
                         img[i] = grab.GetArray()
                         grab.Release()
         return [i.T for i in img if i is not None]  # Transpose to have the correct size
@@ -214,7 +234,7 @@ class Camera(BaseCamera):
             self.logger.info(f'Trying to start again the free acquisition of camera {self}')
             return
         self.logger.info(f'Starting a free run acquisition of camera {self}')
-        i = 0  # Used to keep track of the number of frames
+        self.i = 0  # Used to keep track of the number of frames
         self._stop_free_run.clear()
         t0 = time.time()
         self.free_run_running = True
@@ -229,14 +249,14 @@ class Camera(BaseCamera):
                 self.logger.debug('Got {} new frames'.format(len(data)))
                 img = None
                 for img in data:
-                    i += 1
-                    self.logger.debug('Number of frames: {}'.format(i))
+                    self.i += 1
+                    self.logger.debug('Number of frames: {}'.format(self.i))
                     # This will broadcast the data just acquired with the current timestamp
                     # The timestamp is very unreliable, especially if the camera has a frame grabber.
                     # self.publisher.publish('free_run', [time.time(), img])
-                    self.listener.publish(img, f'{self.id}_free_run')
-                self.fps = round(i / (time.time() - t0))
-                sleep(0.010)
+                    # self.listener.publish(img, f'{self.id}_free_run')
+                self.fps = round(self.i / (time.time() - t0))
+                sleep(0.020)
                 self.temp_image = img
         except Exception as e:
             self.free_run_running = False

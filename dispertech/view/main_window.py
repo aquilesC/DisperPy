@@ -18,7 +18,7 @@ class MainWindow(QMainWindow):
     def __init__(self, experiment=None):
         super().__init__()
         uic.loadUi(os.path.join(VIEW_BASE_DIR, 'GUI', 'Main_Window.ui'), self)
-        # self.focus_window = FocusingWindow(experiment)
+        self.focus_window = FocusingWindow(experiment)
         self.config_window = TrackingConfig(experiment.config['tracking'], parent=None)
 
         self.experiment = experiment
@@ -42,7 +42,7 @@ class MainWindow(QMainWindow):
         self.temperature_timer.timeout.connect(self.update_temperatures)
         self.temperature_timer.start(5000)
 
-        # self.actionAlign_Tool.triggered.connect(self.focus_window.show)
+        self.actionAlign_Tool.triggered.connect(self.focus_window.show)
         self.action_set_roi.triggered.connect(self.set_roi)
         self.action_start_tracking.triggered.connect(self.experiment.start_tracking)
         self.action_tracking_config.triggered.connect(self.config_window.show)
@@ -52,6 +52,8 @@ class MainWindow(QMainWindow):
             self.experiment.cameras[1].max_height
         ])
 
+        self.line_exposure.setText(str(self.experiment.cameras[1].exposure.m_as('ms')))
+        self.line_gain.setText(str(self.experiment.cameras[1].gain))
         self.button_camera_apply.clicked.connect(self.update_camera_settings)
 
     def change_power(self):
@@ -78,9 +80,9 @@ class MainWindow(QMainWindow):
     def update_image(self):
         image = self.experiment.cameras[1].temp_image
         if not image is None:
-            if image.shape[2] > 1:
-                image = np.sum(image, axis=2)
             self.camera_widget.update_image(image)
+        if not self.experiment.temp_locations is None:
+            self.camera_widget.draw_target_pointer(self.experiment.temp_locations)
 
     def update_temperatures(self):
         self.sample_temperature.display(self.experiment.electronics.temp_sample)
@@ -88,21 +90,22 @@ class MainWindow(QMainWindow):
         self.lcd_fps.display(self.experiment.cameras[1].fps)
 
     def set_roi(self):
-        values = self.camera_widget.get_roi_values()
-        X = values[0]
-        Y = values[1]
+        X, Y = self.camera_widget.get_roi_values()
         new_values = self.experiment.cameras[1].set_ROI(X, Y)
-        self.camera_widget.set_roi_lines(new_values[0], new_values[1])
+        self.camera_widget.set_roi_lines(new_values[1], new_values[0])
         self.experiment.cameras[1].start_free_run()
 
     def update_camera_settings(self):
         exposure = float(self.line_exposure.text()) * Q_('ms')
         self.experiment.cameras[1].stop_free_run()
         new_exposure = self.experiment.cameras[1].set_exposure(exposure)
+        gain = float(self.line_gain.text())
+        new_gain = self.experiment.cameras[1].set_gain(gain)
         self.line_exposure.setText(str(new_exposure.m_as('ms')))
         self.experiment.cameras[1].start_free_run()
 
     def toggle_tracking(self):
+        self.experiment.config['tracking'] = self.config_window.get_config()
         if self.experiment.tracking:
             self.experiment.stop_tracking()
         else:

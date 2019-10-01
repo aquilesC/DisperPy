@@ -32,7 +32,7 @@ int Top_LED = 42;
 int Measure_LED = 44;
 byte rx_byte = 0;        // stores received byte
 
-int piezo_delay = 25; // delay before stopping the movement of the piezo
+int piezo_delay = 25; // delay before stopping the movement of the piezo in milliseconds
 
 void setup() {
   for (i = 2; i <= 13; i++) {

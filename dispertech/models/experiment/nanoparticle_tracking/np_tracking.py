@@ -13,7 +13,6 @@ from dispertech.models.experiment.nanoparticle_tracking import NO_CORRECTION
 from dispertech.models.experiment.nanoparticle_tracking.decorators import make_async_thread
 from dispertech.models.experiment.nanoparticle_tracking.exceptions import StreamSavingRunning
 from dispertech.models.experiment.nanoparticle_tracking.localization import calculate_locations_image
-from dispertech.models.experiment.nanoparticle_tracking.saver import worker_listener
 from experimentor import general_stop_event
 from experimentor.config.settings import SUBSCRIBER_EXIT_KEYWORD
 from experimentor.lib.log import get_logger
@@ -61,6 +60,8 @@ class NPTracking(BaseExperiment):
         self._threads = []
         self._processes = []
         self._stop_free_run = [Event(), Event()]
+
+        self.temp_locations = None
 
         self.fps = 0  # Calculates frames per second based on the number of frames received in a period of time
 
@@ -133,9 +134,9 @@ class NPTracking(BaseExperiment):
         which cameras[0] is the camera to look at the end of the fiber and cameras[1] is the camera used in the
         microscope.
         """
-        # camera_fiber = self.load_camera(self.config['camera_fiber']['model'])
+        camera_fiber = self.load_camera(self.config['camera_fiber']['model'])
         camera_microscope = self.load_camera(self.config['camera_microscope']['model'])
-        # self.cameras[0] = self.initialize_camera(camera_fiber, self.config['camera_fiber'])
+        self.cameras[0] = self.initialize_camera(camera_fiber, self.config['camera_fiber'])
         self.cameras[1] = self.initialize_camera(camera_microscope, self.config['camera_microscope'])
 
     def load_electronics(self):
@@ -143,6 +144,7 @@ class NPTracking(BaseExperiment):
         control the movement of a mirror mounted on Piezos.
         """
         self.electronics = ArduinoModel()
+        self.electronics.initialize()
 
     def set_config(self, config_values: dict):
         self.config.update(config_values)
@@ -230,7 +232,7 @@ class NPTracking(BaseExperiment):
         else:
             config = self.config['camera_microscope']
         camera.configure(config)
-        camera._stop_free_run.clear()
+        camera._stop_free_run.set()
         camera.start_free_run()
         self.logger.debug(f'Started free run of camera {camera}')
 
@@ -277,18 +279,27 @@ class NPTracking(BaseExperiment):
         """
         if self.tracking:
             self.logger.warning("Tracking already running")
+            self.stop_tracking()
             return
         self.tracking = True
         id = self.cameras[1].id
         self.logger.debug('Calculating positions with trackpy')
         self.localize = Subscriber(calculate_locations_image, f"{id}_free_run", "locations", [], {'diameter': 11})
         self.localize.start()
+        self.connect(self.update_locations, 'locations')
 
+    def update_locations(self, locations):
+        self.temp_locations = locations
+
+    @make_async_thread
     def stop_tracking(self):
-        print('Stop_tracking')
         id = self.cameras[1].id
         self.listener.publish(SUBSCRIBER_EXIT_KEYWORD, f"{id}_free_run")
+        while self.localize.is_alive():
+            time.sleep(0.02)
+        self.logger.info('Tracking Stopped')
         self.tracking = False
+        self.temp_locations = None
 
     def start_saving_location(self):
         self.saving_location = True

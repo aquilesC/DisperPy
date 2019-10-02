@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>933</width>
-    <height>624</height>
+    <width>320</width>
+    <height>314</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dispertech: Sample Data</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">font: 25 11pt &quot;Ubuntu&quot;;</string>
+   <string notr="true">font: 25 10pt &quot;Ubuntu&quot;;</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -36,6 +36,15 @@
       <layout class="QFormLayout" name="formLayout_2">
        <item row="0" column="0">
         <widget class="QLabel" name="label_4">
+         <property name="font">
+          <font>
+           <family>Ubuntu</family>
+           <pointsize>10</pointsize>
+           <weight>3</weight>
+           <italic>false</italic>
+           <bold>false</bold>
+          </font>
+         </property>
          <property name="text">
           <string>Sample Name</string>
          </property>
@@ -140,8 +149,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>933</width>
-     <height>39</height>
+     <width>320</width>
+     <height>22</height>
     </rect>
    </property>
   </widget>

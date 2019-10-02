@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1024</width>
-    <height>1166</height>
+    <height>865</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,7 +19,7 @@
   <property name="minimumSize">
    <size>
     <width>1024</width>
-    <height>768</height>
+    <height>550</height>
    </size>
   </property>
   <property name="maximumSize">
@@ -41,9 +41,15 @@
    <layout class="QHBoxLayout" name="horizontalLayout_7">
     <item>
      <widget class="QWidget" name="widget_3" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="maximumSize">
        <size>
-        <width>450</width>
+        <width>250</width>
         <height>16777215</height>
        </size>
       </property>
@@ -68,6 +74,12 @@
        </item>
        <item>
         <widget class="QGroupBox" name="groupBox_2">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>150</height>
+          </size>
+         </property>
          <property name="title">
           <string>Motor</string>
          </property>
@@ -186,6 +198,12 @@
        </item>
        <item>
         <widget class="QGroupBox" name="groupBox">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>100</height>
+          </size>
+         </property>
          <property name="title">
           <string>Laser Power</string>
          </property>
@@ -340,6 +358,19 @@
          </layout>
         </widget>
        </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
       </layout>
      </widget>
     </item>
@@ -352,7 +383,14 @@
         </widget>
        </item>
        <item>
-        <widget class="QWidget" name="plots_widget" native="true"/>
+        <widget class="QWidget" name="plots_widget" native="true">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>250</height>
+          </size>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -365,7 +403,7 @@
      <x>0</x>
      <y>0</y>
      <width>1024</width>
-     <height>39</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

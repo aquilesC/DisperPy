@@ -28,11 +28,12 @@ class StartWindow(QMainWindow):
     def show_focusing(self):
         self.focusing = FocusingWindow(self.experiment)
         self.focusing.show()
+        self.focusing.showMaximized()
 
     def show_main_window(self):
         self.main_window = MainWindow(self.experiment)
         self.main_window.show()
-
+        self.main_window.showMaximized()
 
 
 if __name__ == "__main__":

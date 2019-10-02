@@ -11,16 +11,17 @@ with open('README.md', 'r') as f:
     long_description = f.read()
 
 setup(
-    name='PyNTA',
+    name='dispertech',
     version=version,
-    description='Python Nanoparticle Tracking Analysis',
+    description='Dispertech Controller Software',
     packages=find_packages(),
-    url='https://github.com/nanoepics/pynta',
+    url='https://github.com/aquilesC/DisperPy',
     license='GPLv3',
     author='Aquiles Carattino',
-    author_email='aquiles@uetke.com',
+    author_email='aquiles@dispertech.com',
     classifiers=[
         'Intended Audience :: End Users/Desktop',
+        'Development Status :: 4 - Beta',
         'Operating System :: Microsoft :: Windows',
         'Programming Language :: Python',
     ],
@@ -36,14 +37,15 @@ setup(
                       'pyzmq',
                       'numba',
                       'pyvisa',
-                      'pyvisa-py', 'experimentor'
+                      'pyvisa-py',
+                      'experimentor',
+                      'numba'
                       ],
     long_description=long_description,
     long_description_content_type="text/markdown",
     entry_points={
         "console_scripts": [
-            "pynta=pynta.__main__:main"
+            "dispertech=dispertech.__main__:main"
         ]
     }
 )
-

@@ -5,8 +5,7 @@ from PyQt5.QtWidgets import QApplication
 
 from dispertech.models.experiment.nanoparticle_tracking.np_tracking import NPTracking
 from dispertech.util.log import get_logger
-from dispertech.view.start_window import StartWindow
-
+from dispertech.view.main_window import MainWindow
 
 
 def main():
@@ -29,9 +28,11 @@ def main():
     else:
         config_file = args.config_file
     exp = NPTracking(config_file)
-    exp.initialize_camera()
+    exp.load_cameras()
+    exp.load_electronics()
+    exp.electronics.monitor_temperature()
     app = QApplication([])
-    window = StartWindow(exp)
+    window = MainWindow(exp)
     window.show()
     app.exec()
 

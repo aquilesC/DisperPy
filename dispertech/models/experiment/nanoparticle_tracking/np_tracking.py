@@ -13,6 +13,7 @@ from dispertech.models.experiment.nanoparticle_tracking import NO_CORRECTION
 from dispertech.models.experiment.nanoparticle_tracking.decorators import make_async_thread
 from dispertech.models.experiment.nanoparticle_tracking.exceptions import StreamSavingRunning
 from dispertech.models.experiment.nanoparticle_tracking.localization import calculate_locations_image
+from dispertech.models.experiment.nanoparticle_tracking.saver import VideoSaver
 from experimentor import general_stop_event
 from experimentor.config.settings import SUBSCRIBER_EXIT_KEYWORD
 from experimentor.lib.log import get_logger
@@ -64,6 +65,7 @@ class NPTracking(BaseExperiment):
         self.temp_locations = None
 
         self.fps = 0  # Calculates frames per second based on the number of frames received in a period of time
+        self.saver = None
 
     def configure_database(self):
         pass
@@ -358,6 +360,21 @@ class NPTracking(BaseExperiment):
         self.waterfall_index += 1
         self.publisher.publish('waterfall_data', wf)
 
+    def start_saving(self):
+        if self.saver and self.saver.is_alive():
+            self.logger.warning('Traing to start the saver again')
+            return
+        file_path = os.path.join(self.config['saving']['directory'], self.config['saving']['filename_video'])
+        meta = json.dumps(self.config)
+        topic = f'{self.cameras[1].id}_free_run'
+        max_memory = self.config['saving']['max_memory']
+        self.saver = VideoSaver(file_path, meta, topic, max_memory)
+        self.saver.start()
+
+    def stop_saving(self):
+        self.listener.publish(SUBSCRIBER_EXIT_KEYWORD, f'{self.cameras[1].id}_free_run')
+
+
     def finalize(self):
         general_stop_event.set()
         try:
@@ -370,6 +387,7 @@ class NPTracking(BaseExperiment):
             self.logger.error(e)
         time.sleep(.5)
         self.stop_save_stream()
+        self.stop_saving()
         try:
             self.electronics.finalize()
         except Exception as e:

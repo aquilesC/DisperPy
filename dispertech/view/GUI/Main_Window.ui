@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>1608</width>
-    <height>1443</height>
+    <height>1503</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Dispertech: Measuring</string>
   </property>
   <property name="styleSheet">
    <string notr="true">font: 25 12pt &quot;Ubuntu&quot;;</string>
@@ -194,9 +194,16 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="start_free_run">
+           <widget class="QPushButton" name="button_start_free_run">
             <property name="text">
              <string>Start</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="button_stop_free_run">
+            <property name="text">
+             <string>Stop</string>
             </property>
            </widget>
           </item>
@@ -282,6 +289,7 @@
    </attribute>
    <addaction name="action_set_roi"/>
    <addaction name="action_start_tracking"/>
+   <addaction name="action_start_recording"/>
   </widget>
   <action name="action_Quit">
    <property name="text">
@@ -343,6 +351,18 @@
    </property>
    <property name="toolTip">
     <string>Configure Tracking Parameters</string>
+   </property>
+  </action>
+  <action name="action_start_recording">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/Icons/pictogram_record.svg</normaloff>:/icons/Icons/pictogram_record.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Start Recording</string>
+   </property>
+   <property name="toolTip">
+    <string>Start Recording</string>
    </property>
   </action>
  </widget>

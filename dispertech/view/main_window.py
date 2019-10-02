@@ -5,7 +5,7 @@ import numpy as np
 import dispertech.view.GUI.resources
 from PyQt5 import uic
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QMainWindow, QVBoxLayout
+from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QMessageBox
 
 from dispertech.view import VIEW_BASE_DIR
 from dispertech.view.focusing_window import FocusingWindow
@@ -34,6 +34,9 @@ class MainWindow(QMainWindow):
         self.button_led.clicked.connect(self.toggle_fiber_led)
         self.button_light.clicked.connect(self.toggle_light_led)
 
+        self.button_start_free_run.clicked.connect(self.start_free_run)
+        self.button_stop_free_run.clicked.connect(self.stop_free_run)
+
         self.image_timer = QTimer()
         self.image_timer.timeout.connect(self.update_image)
         self.image_timer.start(30)
@@ -46,15 +49,19 @@ class MainWindow(QMainWindow):
         self.action_set_roi.triggered.connect(self.set_roi)
         self.action_start_tracking.triggered.connect(self.experiment.start_tracking)
         self.action_tracking_config.triggered.connect(self.config_window.show)
+        self.action_start_recording.triggered.connect(self.toggle_recording)
 
         self.camera_widget.setup_roi_lines([
             self.experiment.cameras[1].max_width,
             self.experiment.cameras[1].max_height
         ])
 
+
         self.line_exposure.setText(str(self.experiment.cameras[1].exposure.m_as('ms')))
         self.line_gain.setText(str(self.experiment.cameras[1].gain))
         self.button_camera_apply.clicked.connect(self.update_camera_settings)
+
+        self.is_recording = False
 
     def change_power(self):
         power = int(self.power_slider.value())
@@ -91,9 +98,24 @@ class MainWindow(QMainWindow):
 
     def set_roi(self):
         X, Y = self.camera_widget.get_roi_values()
-        new_values = self.experiment.cameras[1].set_ROI(X, Y)
-        self.camera_widget.set_roi_lines(new_values[1], new_values[0])
+        try:
+            new_values = self.experiment.cameras[1].set_ROI(X, Y)
+        except Exception as e:
+            message = QMessageBox()
+            message.setText(f"{e}")
+            message.exec()
+            return
+        self.camera_widget.set_roi_lines(new_values[0], new_values[1])
         self.experiment.cameras[1].start_free_run()
+
+    def toggle_recording(self):
+        if not self.is_recording:
+            self.experiment.start_saving()
+            self.is_recording = True
+        else:
+            self.experiment.stop_saving()
+            self.is_recording = False
+
 
     def update_camera_settings(self):
         exposure = float(self.line_exposure.text()) * Q_('ms')
@@ -110,3 +132,9 @@ class MainWindow(QMainWindow):
             self.experiment.stop_tracking()
         else:
             self.experiment.start_tracking()
+
+    def start_free_run(self):
+        self.experiment.cameras[1].start_free_run()
+
+    def stop_free_run(self):
+        self.experiment.cameras[1].stop_free_run()

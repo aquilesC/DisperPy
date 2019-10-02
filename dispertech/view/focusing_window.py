@@ -2,7 +2,7 @@ import numpy as np
 import os
 import pyqtgraph as pg
 
-from PyQt5 import uic
+from PyQt5 import uic, QtGui
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QMainWindow, QHBoxLayout
 
@@ -69,16 +69,20 @@ class FocusingWindow(QMainWindow):
         self.intensities = np.zeros(300)
 
     def auto_fiber(self):
+        self.experiment.cameras[0].stop_free_run()
         self.experiment.cameras[0].auto_exposure()
         self.experiment.cameras[0].auto_gain()
         self.line_fiber_exposure.setText(f"{self.experiment.cameras[0].exposure.m_as('ms'):02.2f}")
         self.line_fiber_gain.setText(f"{self.experiment.cameras[0].gain:02.2f}")
+        self.experiment.cameras[0].start_free_run()
 
     def auto_microscope(self):
+        self.experiment.cameras[1].stop_free_run()
         self.experiment.cameras[1].auto_exposure()
         self.experiment.cameras[1].auto_gain()
         self.line_microscope_exposure.setText(f"{self.experiment.cameras[1].exposure.m_as('ms'):02.2f}")
         self.line_microscope_gain.setText(f"{self.experiment.cameras[1].gain:02.2f}")
+        self.experiment.cameras[1].start_free_run()
 
     def update_image(self):
         if not self.experiment.cameras[0].temp_image is None:
@@ -97,7 +101,6 @@ class FocusingWindow(QMainWindow):
 
     def move_right(self):
         speed = int(self.speed_slider.value())
-        print(speed)
         self.experiment.electronics.move_mirror(speed, 1, 2)
 
     def move_left(self):
@@ -110,7 +113,6 @@ class FocusingWindow(QMainWindow):
 
     def move_down(self):
         speed = int(self.speed_slider.value())
-        print(speed)
         self.experiment.electronics.move_mirror(speed, 0, 1)
 
     def change_power(self):
@@ -158,6 +160,11 @@ class FocusingWindow(QMainWindow):
         self.line_fiber_gain.setText(f"{gain_0:02.2f}")
         self.line_microscope_gain.setText(f"{gain_1:02.2f}")
 
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        self.timer.stop()
+        self.experiment.cameras[0].stop_free_run()
+        self.experiment.cameras[1].stop_free_run()
+        super().closeEvent(a0)
 
 if __name__ == '__main__':
     from PyQt5.QtWidgets import QApplication

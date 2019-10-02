@@ -10,6 +10,8 @@
     The program forces software trigger during :meth:`~experimentor.model.cameras.basler.Camera.initialize`.
 """
 import logging
+from dispertech.models.cameras import _basler_lock
+
 import time
 
 from multiprocessing import Event
@@ -42,7 +44,7 @@ class Camera(BaseCamera):
         self.friendly_name = None
         self._stop_free_run = Event()
         self.free_run_running = False
-        self.temp_image = None
+        self._temp_image = None
         self.listener = Listener()
         self.fps = 0
         self.i = 0  # Number of frames acquired
@@ -77,19 +79,21 @@ class Camera(BaseCamera):
 
         self.logger.info(f'Loaded camera {self.camera.GetDeviceInfo().GetModelName()}')
 
+
+
+        self.camera.RegisterConfiguration(pylon.SoftwareTriggerConfiguration(), pylon.RegistrationMode_ReplaceAll,
+                                          pylon.Cleanup_Delete)
+        self.clear_ROI()
         self.max_width = self.camera.Width.Max
         self.max_height = self.camera.Height.Max
         offsetX = self.camera.OffsetX.Value
         offsetY = self.camera.OffsetY.Value
         width = self.camera.Width.Value
         height = self.camera.Height.Value
-        self.X = (offsetX, offsetX+width)
-        self.Y = (offsetY, offsetY+height)
-
-        self.camera.RegisterConfiguration(pylon.SoftwareTriggerConfiguration(), pylon.RegistrationMode_ReplaceAll,
-                                          pylon.Cleanup_Delete)
+        self.X = (offsetX, offsetX + width)
+        self.Y = (offsetY, offsetY + height)
         self.set_acquisition_mode(self.MODE_SINGLE_SHOT)
-        self.clear_ROI()
+
         self.exposure = self.get_exposure()
         self.gain = self.get_gain()
 
@@ -132,11 +136,10 @@ class Camera(BaseCamera):
         while self.free_run_running:
             self.logger.info('Changing ROI while free running')
             sleep(0.002)
-        width = abs(X[1]-X[0])+1
-        width = int(width-width%4)
+
+        width = int(X[1]-X[1]%4)
         x_pos = int(X[0]-X[0]%4)
-        height = int(abs(Y[1]-Y[0])+1)
-        height = int(height-height%2)
+        height = int(Y[1]-Y[1]%2)
         y_pos = int(Y[0]-Y[0]%2)
         self.logger.info(f'Updating ROI: (x, y, width, height) = ({x_pos}, {y_pos}, {width}, {height})')
         # if x_pos+width-1 > self.max_width:
@@ -148,17 +151,17 @@ class Camera(BaseCamera):
         self.clear_ROI()
         self.logger.debug(f'Setting width to {width}')
         self.camera.Width.SetValue(width)
-        self.logger.debug(f'Setting X offset to {x_pos}')
-        self.camera.OffsetX.SetValue(x_pos)
         self.logger.debug(f'Setting Height to {height}')
         self.camera.Height.SetValue(height)
+        self.logger.debug(f'Setting X offset to {x_pos}')
+        self.camera.OffsetX.SetValue(x_pos)
         self.logger.debug(f'Setting Y offset to {y_pos}')
         self.camera.OffsetY.SetValue(y_pos)
         self.X = (x_pos, x_pos+width)
         self.Y = (y_pos, y_pos+width)
         self.width = self.camera.Width.Value
         self.height = self.camera.Height.Value
-        return self.X, self.Y
+        return (x_pos, width), (y_pos, height)
 
     def clear_ROI(self):
         """ Resets the ROI to the maximum area of the camera"""
@@ -186,6 +189,16 @@ class Camera(BaseCamera):
                 self.camera.StartGrabbing(1)
         self.camera.ExecuteSoftwareTrigger()
 
+    @property
+    def temp_image(self):
+        if self._temp_image is not None:
+            return self._temp_image.astype(np.uint8)
+        return self._temp_image
+
+    @temp_image.setter
+    def temp_image(self, image):
+        self._temp_image = image
+
     def set_gain(self, gain: float) -> float:
         self.camera.Gain.SetValue(gain)
         return self.get_gain()
@@ -203,26 +216,27 @@ class Camera(BaseCamera):
         return self.exposure
 
     def read_camera(self):
-        if not self.camera.IsGrabbing():
-            raise WrongCameraState('You need to trigger the camera before reading from it')
+        with _basler_lock:
+            if not self.camera.IsGrabbing():
+                raise WrongCameraState('You need to trigger the camera before reading from it')
 
-        if self.mode == self.MODE_SINGLE_SHOT:
-            grab = self.camera.RetrieveResult(int(self.exposure.m_as('ms')) + 100, pylon.TimeoutHandling_Return)
-            img = [grab.Array]
-            grab.Release()
-            self.camera.StopGrabbing()
-        else:
-            img = []
-            num_buffers = self.camera.NumReadyBuffers.Value
-            self.logger.debug(f'{self.camera.NumReadyBuffers.Value} frames available')
-            if num_buffers:
-                img = [None] * num_buffers
-                for i in range(num_buffers):
-                    grab = self.camera.RetrieveResult(int(self.exposure.m_as('ms')), pylon.TimeoutHandling_Return)
-                    if grab and grab.GrabSucceeded():
-                        img[i] = grab.GetArray()
-                        grab.Release()
-        return [i.T for i in img if i is not None]  # Transpose to have the correct size
+            if self.mode == self.MODE_SINGLE_SHOT:
+                grab = self.camera.RetrieveResult(int(self.exposure.m_as('ms')) + 100, pylon.TimeoutHandling_Return)
+                img = [grab.Array]
+                grab.Release()
+                self.camera.StopGrabbing()
+            else:
+                img = []
+                num_buffers = self.camera.NumReadyBuffers.Value
+                self.logger.debug(f'{self.camera.NumReadyBuffers.Value} frames available')
+                if num_buffers:
+                    img = [None] * num_buffers
+                    for i in range(num_buffers):
+                        grab = self.camera.RetrieveResult(int(self.exposure.m_as('ms')), pylon.TimeoutHandling_Return)
+                        if grab and grab.GrabSucceeded():
+                            img[i] = grab.GetArray()
+                            grab.Release()
+            return [i.T for i in img if i is not None]  # Transpose to have the correct size
 
     @make_async_thread
     def start_free_run(self):
@@ -241,6 +255,7 @@ class Camera(BaseCamera):
         self.logger.debug('First frame of a free_run')
         self.set_acquisition_mode(self.MODE_CONTINUOUS)
         self.trigger_camera()  # Triggers the camera only once
+        exposure = self.get_exposure()
         try:
             while not self._stop_free_run.is_set():
                 data = self.read_camera()
@@ -254,9 +269,9 @@ class Camera(BaseCamera):
                     # This will broadcast the data just acquired with the current timestamp
                     # The timestamp is very unreliable, especially if the camera has a frame grabber.
                     # self.publisher.publish('free_run', [time.time(), img])
-                    # self.listener.publish(img, f'{self.id}_free_run')
+                    self.listener.publish(img, f'{self.id}_free_run')
                 self.fps = round(self.i / (time.time() - t0))
-                sleep(0.020)
+                sleep(exposure.m_as('s'))
                 self.temp_image = img
         except Exception as e:
             self.free_run_running = False

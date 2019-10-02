@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Dispertech: Sample Data</string>
   </property>
   <property name="styleSheet">
    <string notr="true">font: 25 11pt &quot;Ubuntu&quot;;</string>

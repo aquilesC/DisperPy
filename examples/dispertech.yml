@@ -12,7 +12,7 @@ arduino:
 saving:
   auto_save: False
   auto_save_waterfall: True
-  directory: D:\Data
+  directory: /home/aquiles
   filename_video: Video # Can be the same filename for video and photo
   filename_photo: Snap
   filename_tracks: Tracks
@@ -95,3 +95,7 @@ debug:
   queue_memory: False
   to_screen: True
 
+sample:
+  sample_name: a123
+  sample_description: Short Description
+  cartrdige_number: 19NNMM

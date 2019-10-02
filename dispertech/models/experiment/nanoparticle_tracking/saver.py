@@ -27,13 +27,88 @@
 
     .. sectionauthor:: Aquiles Carattino <aquiles@uetke.com>
 """
+from multiprocessing import Process
+
 import zmq
 import h5py
 import numpy as np
 from datetime import datetime
 
-from pynta.util.log import get_logger
+from experimentor.config.settings import PUBLISHER_PUBLISH_PORT, SUBSCRIBER_EXIT_KEYWORD
+from experimentor.lib.log import get_logger
 
+
+class VideoSaver(Process):
+    def __init__(self, file_path, meta, topic, max_memory=150):
+        super().__init__()
+        self.logger = get_logger(name=__name__)
+        self.logger.info('Starting worker saver for topic {} on port {}'.format(topic, PUBLISHER_PUBLISH_PORT))
+        self.file_path = file_path
+        self.meta = meta
+        self.topic = topic
+        self.max_memory = max_memory
+
+    def run(self):
+        context = zmq.Context()
+        socket = context.socket(zmq.SUB)
+        socket.connect("tcp://localhost:{}".format(PUBLISHER_PUBLISH_PORT))
+        topic_filter = self.topic.encode('ascii')
+        socket.setsockopt(zmq.SUBSCRIBE, topic_filter)
+        allocate_memory = self.max_memory  # megabytes of memory to allocate on the hard drive.
+
+        with h5py.File(self.file_path, "a") as f:
+            now = str(datetime.now())
+            g = f.create_group(now)
+            g.create_dataset('metadata', data=self.meta.encode("ascii", "ignore"))
+            f.flush()
+            # Has to be submitted via the socket a string 'stop'
+            i = 0
+            j = 0
+            first = True
+
+            while True:
+                topic = socket.recv_string()
+                data = socket.recv_pyobj()
+                self.logger.debug('Got data of type {} on the saver topic {}.'.format(type(data), topic))
+                if isinstance(data, str):
+                    self.logger.info('Got the signal to stop the saving')
+                    break
+                if first:  # First time it runs, creates the dataset
+                    x = data.shape[0]
+                    y = data.shape[1]
+                    self.logger.debug('Image size: {}x{}'.format(x, y))
+                    allocate = int(allocate_memory / data.nbytes * 1024 * 1024)
+                    self.logger.debug('Allocating {}MB to stream to disk'.format(allocate_memory))
+                    self.logger.debug('Allocate {} frames'.format(allocate))
+                    d = np.zeros((x, y, allocate), dtype=data.dtype)
+                    dset = g.create_dataset('timelapse', (x, y, allocate), maxshape=(x, y, None),
+                                            compression='gzip', compression_opts=1,
+                                            dtype=data.dtype)  # The images are going to be stacked along the z-axis.
+                    d[:, :, i] = data
+                    i += 1
+                    first = False
+                else:
+                    if i == allocate:
+                        self.logger.debug('Allocating more memory')
+                        dset[:, :, j:j + allocate] = d
+                        dset.resize((x, y, j + 2 * allocate))
+                        d = np.zeros((x, y, allocate), dtype=data.dtype)
+                        i = 0
+                        j += allocate
+                    d[:, :, i] = data
+                    i += 1
+
+            if j > 0 or i > 0:
+                self.logger.info('Saving last bits of data before stopping.')
+                self.logger.debug('Missing values: {}'.format(i))
+                dset[:, :, j:j + i] = d[:, :, :i]  # Last save before closing
+
+            # This last bit is to avoid having a lot of zeros at the end of the timelapses
+            dset.resize((x, y, j + i))
+
+            self.logger.info('Flushing file to disk...')
+            f.flush()
+            self.logger.info('Finished writing to disk')
 
 def worker_listener(file_path, meta, topic, port=5555, max_memory=500):
     """ Function that listens on the specified port for new data and then saves it to disk. It is the same as

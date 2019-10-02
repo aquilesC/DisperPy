@@ -1,5 +1,9 @@
 <RCC>
   <qresource prefix="icons">
+    <file>Icons/arrow_top.png</file>
+    <file>Icons/arrow_right.png</file>
+    <file>Icons/arrow_left.png</file>
+    <file>Icons/arrow_bottom.png</file>
     <file>Icons/pictogram_record.svg</file>
     <file>Icons/duotone_chart.svg</file>
     <file>Icons/applications-accessories.png</file>

@@ -124,8 +124,8 @@
               <string/>
              </property>
              <property name="icon">
-              <iconset>
-               <normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_top.png</normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_top.png</iconset>
+              <iconset resource="resources.qrc">
+               <normaloff>:/icons/Icons/arrow_top.png</normaloff>:/icons/Icons/arrow_top.png</iconset>
              </property>
             </widget>
             <widget class="QPushButton" name="button_down">
@@ -141,8 +141,8 @@
               <string/>
              </property>
              <property name="icon">
-              <iconset>
-               <normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_bottom.png</normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_bottom.png</iconset>
+              <iconset resource="resources.qrc">
+               <normaloff>:/icons/Icons/arrow_bottom.png</normaloff>:/icons/Icons/arrow_bottom.png</iconset>
              </property>
             </widget>
             <widget class="QPushButton" name="button_right">
@@ -158,8 +158,8 @@
               <string/>
              </property>
              <property name="icon">
-              <iconset>
-               <normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_right.png</normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_right.png</iconset>
+              <iconset resource="resources.qrc">
+               <normaloff>:/icons/Icons/arrow_right.png</normaloff>:/icons/Icons/arrow_right.png</iconset>
              </property>
             </widget>
             <widget class="QPushButton" name="button_left">
@@ -175,8 +175,8 @@
               <string/>
              </property>
              <property name="icon">
-              <iconset>
-               <normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_left.png</normaloff>../../../../pynta/pynta/view/GUI/Icons/arrow_left.png</iconset>
+              <iconset resource="resources.qrc">
+               <normaloff>:/icons/Icons/arrow_left.png</normaloff>:/icons/Icons/arrow_left.png</iconset>
              </property>
             </widget>
            </widget>
@@ -389,6 +389,8 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

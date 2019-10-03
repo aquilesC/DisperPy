@@ -390,6 +390,13 @@
      <widget class="QWidget" name="data_widget" native="true">
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>Press Alt to create a cross-cut</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QWidget" name="camera_widget" native="true">
          <layout class="QHBoxLayout" name="horizontalLayout"/>
         </widget>

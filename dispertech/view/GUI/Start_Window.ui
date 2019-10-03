@@ -6,70 +6,113 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>240</width>
-    <height>129</height>
+    <width>466</width>
+    <height>280</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Dispertech: Welcome Screen</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">padding: 0px;</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
+   <property name="styleSheet">
+    <string notr="true">padding: 0px;</string>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QPushButton" name="button_new_sample">
-      <property name="minimumSize">
-       <size>
-        <width>70</width>
-        <height>70</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>70</width>
-        <height>70</height>
-       </size>
-      </property>
+     <widget class="QLabel" name="label">
       <property name="text">
-       <string>New Sample</string>
+       <string>DisperTech Starting Window</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="button_align">
-      <property name="minimumSize">
-       <size>
-        <width>70</width>
-        <height>70</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>70</width>
-        <height>70</height>
-       </size>
-      </property>
-      <property name="text">
-       <string>Align</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="button_measure">
-      <property name="minimumSize">
-       <size>
-        <width>70</width>
-        <height>70</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>70</width>
-        <height>70</height>
-       </size>
-      </property>
-      <property name="text">
-       <string>Measure</string>
-      </property>
+     <widget class="QWidget" name="widget" native="true">
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QPushButton" name="button_new_sample">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>70</width>
+           <height>70</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>New Sample</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="button_align">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>70</width>
+           <height>70</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Align</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="button_measure">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>70</width>
+           <height>70</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Measure</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </item>
    </layout>
@@ -79,8 +122,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>240</width>
-     <height>21</height>
+     <width>466</width>
+     <height>39</height>
     </rect>
    </property>
   </widget>

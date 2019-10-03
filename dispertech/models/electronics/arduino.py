@@ -32,23 +32,25 @@ class ArduinoModel:
 
         self.logger = get_logger()
 
+    @make_async_thread
     def initialize(self):
-        if not self.port:
-            port = Arduino.list_devices()[0]
-        self.driver = rm.open_resource(port, baud_rate=19200)
-        sleep(2)
-        try:
-            self.driver.query("IDN")
-        except VisaIOError:
+        with self.query_lock:
+            if not self.port:
+                port = Arduino.list_devices()[0]
+            self.driver = rm.open_resource(port, baud_rate=19200)
+            sleep(2)
             try:
-                self.driver.read()
+                self.driver.query("IDN")
             except VisaIOError:
-                pass
+                try:
+                    self.driver.read()
+                except VisaIOError:
+                    pass
 
-        self.laser_power(0)
-        self._laser_led = 0
-        self._fiber_led = 0
-        self._top_led = 0
+            self.laser_power(0)
+            self._laser_led = 0
+            self._fiber_led = 0
+            self._top_led = 0
 
     def laser_power(self, power: int):
         """ Changes the laser power. It also switches on or off the laser LED based on the power level set.

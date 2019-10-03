@@ -52,7 +52,7 @@ class FocusingWindow(QMainWindow):
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_image)
-        self.timer.start(30)
+        self.timer.start(50)
 
         self.button_apply.clicked.connect(self.apply_settings)
         self.button_start.clicked.connect(self.start_free_run)
@@ -66,7 +66,7 @@ class FocusingWindow(QMainWindow):
         self.button_fiber_auto.clicked.connect(self.auto_fiber)
         self.button_microscope_auto.clicked.connect(self.auto_microscope)
 
-        self.intensities = np.zeros(300)
+        self.intensities = np.zeros(100)
 
     def auto_fiber(self):
         self.experiment.cameras[0].stop_free_run()
@@ -85,11 +85,12 @@ class FocusingWindow(QMainWindow):
         self.experiment.cameras[1].start_free_run()
 
     def update_image(self):
-        if not self.experiment.cameras[0].temp_image is None:
-            image = np.copy(self.experiment.cameras[0].temp_image)
+        image = self.experiment.cameras[0].temp_image
+        if not image is None:
             self.camera_fiber.update_image(image)
-        if not self.experiment.cameras[1].temp_image is None:
-            image2 = np.copy(self.experiment.cameras[1].temp_image)
+
+        image2 = self.experiment.cameras[1].temp_image
+        if not image2 is None:
             self.camera_microscope.update_image(image2)
             if self.camera_microscope.showCrossCut:
                 cross_cut = self.camera_microscope.crossCut.value()
@@ -136,6 +137,8 @@ class FocusingWindow(QMainWindow):
             self.button_top_led.setStyleSheet("background-color: red")
 
     def start_free_run(self):
+        self.experiment.cameras[0].clear_ROI()
+        self.experiment.cameras[1].clear_ROI()
         self.experiment.cameras[0].start_free_run()
         self.experiment.cameras[1].start_free_run()
 

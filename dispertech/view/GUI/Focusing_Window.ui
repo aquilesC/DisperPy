@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1024</width>
-    <height>865</height>
+    <height>1052</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -64,8 +64,11 @@
          </property>
          <property name="font">
           <font>
-           <pointsize>14</pointsize>
+           <pointsize>10</pointsize>
           </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">font-size: 10pt;</string>
          </property>
          <property name="text">
           <string>Fiber alignment</string>
@@ -246,49 +249,22 @@
        </item>
        <item>
         <widget class="QGroupBox" name="groupBox_3">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>450</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">padding: 0px;</string>
+         </property>
          <property name="title">
           <string>Cameras</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_5">
           <item>
            <widget class="QWidget" name="widget" native="true">
-            <layout class="QHBoxLayout" name="horizontalLayout_6">
-             <item>
-              <widget class="QGroupBox" name="groupBox_5">
-               <property name="title">
-                <string>Microscope</string>
-               </property>
-               <layout class="QVBoxLayout" name="verticalLayout_4">
-                <item>
-                 <widget class="QLabel" name="label_2">
-                  <property name="text">
-                   <string>Exposure</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="line_microscope_exposure"/>
-                </item>
-                <item>
-                 <widget class="QLabel" name="label_3">
-                  <property name="text">
-                   <string>Gain</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="line_microscope_gain"/>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="button_microscope_auto">
-                  <property name="text">
-                   <string>Auto</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
+            <layout class="QVBoxLayout" name="verticalLayout_7">
              <item>
               <widget class="QGroupBox" name="groupBox_4">
                <property name="title">
@@ -325,16 +301,52 @@
                </layout>
               </widget>
              </item>
+             <item>
+              <widget class="QGroupBox" name="groupBox_5">
+               <property name="title">
+                <string>Microscope</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_4">
+                <item>
+                 <widget class="QLabel" name="label_2">
+                  <property name="text">
+                   <string>Exposure</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="line_microscope_exposure"/>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_3">
+                  <property name="text">
+                   <string>Gain</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="line_microscope_gain"/>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="button_microscope_auto">
+                  <property name="text">
+                   <string>Auto</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
             </layout>
            </widget>
           </item>
           <item>
            <widget class="QWidget" name="widget_2" native="true">
-            <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <layout class="QVBoxLayout" name="verticalLayout_8">
              <item>
-              <widget class="QPushButton" name="button_apply">
+              <widget class="QPushButton" name="button_stop">
                <property name="text">
-                <string>Apply</string>
+                <string>Stop</string>
                </property>
               </widget>
              </item>
@@ -346,9 +358,9 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="button_stop">
+              <widget class="QPushButton" name="button_apply">
                <property name="text">
-                <string>Stop</string>
+                <string>Apply</string>
                </property>
               </widget>
              </item>
@@ -403,7 +415,7 @@
      <x>0</x>
      <y>0</y>
      <width>1024</width>
-     <height>21</height>
+     <height>39</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

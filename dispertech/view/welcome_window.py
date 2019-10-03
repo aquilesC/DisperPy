@@ -23,7 +23,7 @@ class WelcomeWindow(QMainWindow):
         sample_data = {
             'name': self.line_sample_name.text(),
             'description': self.line_sample_description.text(),
-            'cartrdige_number': self.line_data_directory.text(),
+            'cartrdige_number': self.line_cartridge_number.text(),
         }
         self.experiment.config['sample'].update(sample_data)
         directory = self.line_data_directory.text()

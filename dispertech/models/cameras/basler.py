@@ -10,6 +10,8 @@
     The program forces software trigger during :meth:`~experimentor.model.cameras.basler.Camera.initialize`.
 """
 import logging
+from threading import Lock
+
 from dispertech.models.cameras import _basler_lock
 
 import time
@@ -50,6 +52,8 @@ class Camera(BaseCamera):
         self.i = 0  # Number of frames acquired
         self.gain = 0
         self.exposure = 0
+        self.camera = None
+        self.initialize_lock = Lock()  # Lock used to prevent anything from happening before initializing the camera
 
     def initialize(self):
         """ Initializes the communication with the camera. Get's the maximum and minimum width. It also forces
@@ -59,43 +63,44 @@ class Camera(BaseCamera):
             synchronize with other hardware.
 
         """
-        self.logger.debug('Initializing Basler Camera')
-        tl_factory = pylon.TlFactory.GetInstance()
-        devices = tl_factory.EnumerateDevices()
-        if len(devices) == 0:
-            raise CameraNotFound('No camera found')
+        with self.initialize_lock:
+            self.logger.debug('Initializing Basler Camera')
+            tl_factory = pylon.TlFactory.GetInstance()
+            devices = tl_factory.EnumerateDevices()
+            if len(devices) == 0:
+                raise CameraNotFound('No camera found')
 
-        for device in devices:
-            if str(self.cam_num) in device.GetFriendlyName():
-                self.camera = pylon.InstantCamera()
-                self.camera.Attach(tl_factory.CreateDevice(device))
-                self.camera.Open()
-                self.friendly_name = device.GetFriendlyName()
+            for device in devices:
+                if str(self.cam_num) in device.GetFriendlyName():
+                    self.camera = pylon.InstantCamera()
+                    self.camera.Attach(tl_factory.CreateDevice(device))
+                    self.camera.Open()
+                    self.friendly_name = device.GetFriendlyName()
 
-        if not self.camera:
-            msg = f'{self.cam_num} not found. Please check your config file and cameras connected'
-            self.logger.error(msg)
-            raise CameraNotFound(msg)
+            if not self.camera:
+                msg = f'{self.cam_num} not found. Please check your config file and cameras connected'
+                self.logger.error(msg)
+                raise CameraNotFound(msg)
 
-        self.logger.info(f'Loaded camera {self.camera.GetDeviceInfo().GetModelName()}')
+            self.logger.info(f'Loaded camera {self.camera.GetDeviceInfo().GetModelName()}')
 
 
 
-        self.camera.RegisterConfiguration(pylon.SoftwareTriggerConfiguration(), pylon.RegistrationMode_ReplaceAll,
-                                          pylon.Cleanup_Delete)
-        self.clear_ROI()
-        self.max_width = self.camera.Width.Max
-        self.max_height = self.camera.Height.Max
-        offsetX = self.camera.OffsetX.Value
-        offsetY = self.camera.OffsetY.Value
-        width = self.camera.Width.Value
-        height = self.camera.Height.Value
-        self.X = (offsetX, offsetX + width)
-        self.Y = (offsetY, offsetY + height)
-        self.set_acquisition_mode(self.MODE_SINGLE_SHOT)
+            self.camera.RegisterConfiguration(pylon.SoftwareTriggerConfiguration(), pylon.RegistrationMode_ReplaceAll,
+                                              pylon.Cleanup_Delete)
+            self.clear_ROI()
+            self.max_width = self.camera.Width.Max
+            self.max_height = self.camera.Height.Max
+            offsetX = self.camera.OffsetX.Value
+            offsetY = self.camera.OffsetY.Value
+            width = self.camera.Width.Value
+            height = self.camera.Height.Value
+            self.X = (offsetX, offsetX + width)
+            self.Y = (offsetY, offsetY + height)
+            self.set_acquisition_mode(self.MODE_SINGLE_SHOT)
 
-        self.exposure = self.get_exposure()
-        self.gain = self.get_gain()
+            self.exposure = self.get_exposure()
+            self.gain = self.get_gain()
 
     def set_acquisition_mode(self, mode):
         self.logger.info(f'Setting acquisition mode to {mode}')
@@ -192,7 +197,9 @@ class Camera(BaseCamera):
     @property
     def temp_image(self):
         if self._temp_image is not None:
-            return self._temp_image.astype(np.uint8)
+            img = np.copy(self._temp_image)
+            self._temp_image = None
+            return img
         return self._temp_image
 
     @temp_image.setter
@@ -292,6 +299,9 @@ class Camera(BaseCamera):
     @property
     def id(self):
         return id(self)
+
+    def set_pixel_format(self, format):
+        self.camera.PixelFormat = format
 
     def __str__(self):
         if self.friendly_name:

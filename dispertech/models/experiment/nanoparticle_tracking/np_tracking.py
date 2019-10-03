@@ -140,6 +140,8 @@ class NPTracking(BaseExperiment):
         camera_microscope = self.load_camera(self.config['camera_microscope']['model'])
         self.cameras[0] = self.initialize_camera(camera_fiber, self.config['camera_fiber'])
         self.cameras[1] = self.initialize_camera(camera_microscope, self.config['camera_microscope'])
+        self.cameras[0].set_pixel_format('Mono12')
+        self.cameras[1].set_pixel_format('Mono12')
 
     def load_electronics(self):
         """ Loads the electronics controller. It is an Arduino microcontroller with extra build-in electronics to

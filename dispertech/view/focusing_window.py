@@ -52,7 +52,7 @@ class FocusingWindow(QMainWindow):
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_image)
-        self.timer.start(50)
+        self.timer.start(10)
 
         self.button_apply.clicked.connect(self.apply_settings)
         self.button_start.clicked.connect(self.start_free_run)

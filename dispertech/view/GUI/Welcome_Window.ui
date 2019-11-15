@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>320</width>
-    <height>314</height>
+    <width>519</width>
+    <height>608</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -54,7 +54,11 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QLineEdit" name="line_sample_name"/>
+        <widget class="QLineEdit" name="line_sample_name">
+         <property name="toolTip">
+          <string>The name or ID of your sample</string>
+         </property>
+        </widget>
        </item>
        <item row="1" column="0">
         <widget class="QLabel" name="label_5">
@@ -67,7 +71,11 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QLineEdit" name="line_sample_description"/>
+        <widget class="QLineEdit" name="line_sample_description">
+         <property name="toolTip">
+          <string>Short description of the sample you are using</string>
+         </property>
+        </widget>
        </item>
        <item row="2" column="0">
         <widget class="QLabel" name="label_2">
@@ -77,7 +85,11 @@
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QLineEdit" name="line_cartridge_number"/>
+        <widget class="QLineEdit" name="line_cartridge_number">
+         <property name="toolTip">
+          <string>The number on the cartridge you are using</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -89,7 +101,11 @@
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
-        <widget class="QLineEdit" name="line_data_directory"/>
+        <widget class="QLineEdit" name="line_data_directory">
+         <property name="toolTip">
+          <string>The path where you want to store data</string>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QPushButton" name="button_open_folder">
@@ -149,8 +165,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>320</width>
-     <height>22</height>
+     <width>519</width>
+     <height>37</height>
     </rect>
    </property>
   </widget>

@@ -9,4 +9,8 @@
     <file>Icons/applications-accessories.png</file>
     <file>Icons/folder-open.png</file>
   </qresource>
+  <qresource prefix="images">
+    <file>Resources/dispertech_thumb.jpg</file>
+    <file>Resources/logo Dispertech - small.jpg</file>
+  </qresource>
 </RCC>

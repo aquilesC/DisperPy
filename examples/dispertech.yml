@@ -96,6 +96,14 @@ debug:
   to_screen: True
 
 sample:
-  sample_name: a123
-  sample_description: Short Description
+  name: a123
+  description: Short Description
   cartrdige_number: 19NNMM
+
+laser_focusing:
+  high:
+    exposure_time: 50ms
+    gain: 18
+  low:
+    exposure_time: 3ms
+    gain: 0

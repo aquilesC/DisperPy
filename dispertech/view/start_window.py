@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 
 from dispertech.view import VIEW_BASE_DIR
 from dispertech.view.focusing_window import FocusingWindow
+from dispertech.view.laser_focusing_window import LaserFocusingWindow
 from dispertech.view.main_window import MainWindow
 from dispertech.view.welcome_window import WelcomeWindow
 
@@ -26,7 +27,7 @@ class StartWindow(QMainWindow):
         self.welcome.show()
 
     def show_focusing(self):
-        self.focusing = FocusingWindow(self.experiment)
+        self.focusing = LaserFocusingWindow(self.experiment)
         self.focusing.show()
         self.focusing.showMaximized()
 

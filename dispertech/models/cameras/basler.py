@@ -120,6 +120,13 @@ class Camera(BaseCamera):
         self.camera.ExposureAuto.SetValue('Once')
         self.get_exposure()
 
+    def set_auto_exposure(self, mode: str):
+        possible_modes = ('Off', 'Once', 'Continuous')
+        if not mode in possible_modes:
+            raise ValueError(f'Mode must be one of {possible_modes}')
+
+        self.camera.ExposureAuto.SetValue(mode)
+
     def auto_gain(self):
         self.camera.GainAuto.SetValue('Off')
         self.camera.GainAuto.SetValue('Once')

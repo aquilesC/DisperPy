@@ -129,6 +129,7 @@ class NPTracking(BaseExperiment):
             camera = cam_module.Camera(cam_init_arguments)
 
         camera.initialize()
+        camera.set_auto_exposure('Off')
         return camera
 
     def load_cameras(self):
@@ -239,6 +240,30 @@ class NPTracking(BaseExperiment):
         camera._stop_free_run.set()
         camera.start_free_run()
         self.logger.debug(f'Started free run of camera {camera}')
+
+    def camera_high_sensitivity(self):
+        """ Configures the camera looking at the fiber end to work in a pre-defined high-sensitivity mode. See the config
+        file to see the parameters used.
+        """
+        camera = self.cameras[0]
+        config = self.config['laser_focusing']['high']
+        camera.configure(config)
+        camera._stop_free_run.set()
+        camera.start_free_run()
+        self.logger.debug(f"Set laser-camera to high-sensitivity mode. "
+                          f"Exposure: {config['exposure_time']}, Gain: {config['gain']}")
+
+    def camera_low_sensitivity(self):
+        """ Configures the camera looking at the fiber end to work in a pre-defined low-sensitivity mode. See the config
+        file to see the parameters used.
+        """
+        camera = self.cameras[0]
+        config = self.config['laser_focusing']['low']
+        camera.configure(config)
+        camera._stop_free_run.set()
+        camera.start_free_run()
+        self.logger.debug(f"Set laser-camera to low-sensitivity mode. "
+                          f"Exposure: {config['exposure_time']}, Gain: {config['gain']}")
 
     def stop_free_run(self, cam: int):
         self.logger.info(f'Setting the stop_event of camera {cam}')
@@ -352,7 +377,7 @@ class NPTracking(BaseExperiment):
             self.waterfall_data = np.zeros((self.config['waterfall']['length_waterfall'], self.camera.width))
             self.waterfall_index = 0
 
-        center_pixel = np.int(self.camera.height / 2)   # Calculates the center of the image
+        center_pixel = np.int(self.camera.height / 2)  # Calculates the center of the image
         vbinhalf = np.int(self.config['waterfall']['vertical_bin'])
         if vbinhalf >= self.current_height / 2 - 1:
             wf = np.array([np.sum(image, 1)])
@@ -375,7 +400,6 @@ class NPTracking(BaseExperiment):
 
     def stop_saving(self):
         self.listener.publish(SUBSCRIBER_EXIT_KEYWORD, f'{self.cameras[1].id}_free_run')
-
 
     def finalize(self):
         general_stop_event.set()

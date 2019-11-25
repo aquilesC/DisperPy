@@ -68,7 +68,6 @@ void setup() {
   digitalWrite(Power_LED, HIGH);
 
   while (!Serial);
-  // set all the other pins you're using as outputs:
   Serial.flush();
   Serial1.flush();
   Serial2.flush();

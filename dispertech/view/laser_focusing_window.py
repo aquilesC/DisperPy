@@ -25,6 +25,10 @@ class LaserFocusingWindow(QMainWindow):
         self.fiber_led = 0
         self.toggle_fiber_led()
 
+        # Switching the laser off
+        self.servo_status = 1
+        self.toggle_servo()
+
         # Setting the speed
         self.fine_speed = 1
         self.coarse_speed = 50
@@ -54,6 +58,8 @@ class LaserFocusingWindow(QMainWindow):
 
         self.button_fiber_led.clicked.connect(self.toggle_fiber_led)
 
+        self.button_laser.clicked.connect(self.toggle_servo)
+
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_image)
         self.timer.start(10)
@@ -82,6 +88,10 @@ class LaserFocusingWindow(QMainWindow):
 
     def change_power(self, power):
         power = int(power)
+        # Open the servo if increasing the power
+        if power > 5 and not self.servo_status:
+            self.toggle_servo()
+
         self.lcd_laser_power.display(power)
         self.experiment.electronics.laser_power(power)
 
@@ -107,6 +117,17 @@ class LaserFocusingWindow(QMainWindow):
             self.button_fiber_led.setStyleSheet("background-color: green")
         else:
             self.button_fiber_led.setStyleSheet("background-color: red")
+
+    def toggle_servo(self):
+        self.servo_status = 0 if self.servo_status else 1
+        if self.servo_status:
+            self.experiment.servo_on()
+            self.button_laser.setStyleSheet("background-color: red")
+            self.button_laser.setText('Switch OFF')
+        else:
+            self.experiment.servo_off()
+            self.button_laser.setStyleSheet("background-color: green")
+            self.button_laser.setText('Switch ON')
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         self.timer.stop()

@@ -148,8 +148,12 @@ class NPTracking(BaseExperiment):
         """ Loads the electronics controller. It is an Arduino microcontroller with extra build-in electronics to
         control the movement of a mirror mounted on Piezos.
         """
-        self.electronics = ArduinoModel()
+        self.electronics = ArduinoModel(**self.config['arduino'])
         self.electronics.initialize()
+
+        # This is a temporary fix in order to control the servo from a different Arduino
+        self.servo = ArduinoModel(**self.config['servo'])
+        self.servo.initialize()
 
     def set_config(self, config_values: dict):
         self.config.update(config_values)
@@ -400,6 +404,16 @@ class NPTracking(BaseExperiment):
 
     def stop_saving(self):
         self.listener.publish(SUBSCRIBER_EXIT_KEYWORD, f'{self.cameras[1].id}_free_run')
+
+    def servo_off(self):
+        """ Move the servo to block the beam. To avoid problems, first put the laser to 0 power.
+        This can generate problems later on, since we can lose track of the power (for ex. on the GUI).
+        """
+        self.electronics.laser_power(0)
+        self.servo.move_servo(0)
+
+    def servo_on(self):
+        self.servo.move_servo(1)
 
     def finalize(self):
         general_stop_event.set()

@@ -7,7 +7,10 @@ user:
   name: Aquiles
 
 arduino:
-  port: COM3
+  device: 1
+
+servo: # This is a temp fix to control the servo with a different Arduino
+  device: 0
 
 saving:
   auto_save: False

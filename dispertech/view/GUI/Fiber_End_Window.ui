@@ -217,6 +217,13 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
+           <widget class="QPushButton" name="button_laser">
+            <property name="text">
+             <string>Swith ON</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QSlider" name="power_slider">
             <property name="minimum">
              <number>1</number>

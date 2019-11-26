@@ -1,6 +1,7 @@
 #include <DallasTemperature.h>
 #include <OneWire.h>
 #include <DHT.h>
+#include <Servo.h>
 
 #define ONE_WIRE_BUS 4
 #define DHTPIN 6     // what pin we're connected to
@@ -9,6 +10,8 @@ DHT dht(DHTPIN, DHTTYPE); //// Initialize DHT sensor for normal 16mhz Arduino
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 DeviceAddress insideThermometer;
+Servo servo;
+
 bool isData;
 
 String Comm = "";
@@ -29,6 +32,9 @@ int Laser_LED = 24;
 int Fiber_LED = 26;
 int Power_LED = 30;
 int Top_LED = 42;
+int Servo_PIN = 13;
+int Servo_ON = 1;
+int Servo_OFF = 10;
 int Measure_LED = 44;
 byte rx_byte = 0;        // stores received byte
 
@@ -46,6 +52,8 @@ void setup() {
   digitalWrite(Laser_LED, HIGH);
   digitalWrite(Fiber_LED, LOW);
   digitalWrite(Top_LED, LOW);
+  servo.attach(Servo_PIN);
+  servo.write(Servo_OFF);
 
   // Load serial monitor
   Serial.begin(19200);
@@ -107,6 +115,17 @@ void loop() {
       }
       Serial.println("LED changed");
     }
+    else if (Comm.startsWith("serv")) {
+      int val = Comm.substring(5, 6).toInt();
+      if (val == 1) {
+        servo.write(Servo_ON);
+        Serial.println("Servo ON");
+      } else {
+        servo.write(Servo_OFF);
+        Serial.println("Servo OFF");
+      }
+
+    }
     else if (Comm.startsWith("mot1")) {
       Serial.println("Waiting for input mot 1");
       while (Serial.available() <= 0) {
@@ -156,9 +175,9 @@ void loop() {
       float humidity = dht.readHumidity();
       Serial.println(humidity);
     }
-    else if (Comm.startsWith("IDN")){
+    else if (Comm.startsWith("IDN")) {
       Serial.println("Dispertech device 1.0");
-      }
+    }
     delay(1);
     Comm = "";
   }

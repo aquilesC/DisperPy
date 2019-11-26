@@ -6,22 +6,24 @@
 """
 from multiprocessing import Event
 from threading import RLock
+from time import sleep
 
 import pyvisa
 from pyvisa import VisaIOError
 
-from dispertech.models.experiment.nanoparticle_tracking.decorators import make_async_thread
 from experimentor.lib.log import get_logger
+
+from dispertech.models.experiment.nanoparticle_tracking.decorators import make_async_thread
+from dispertech.controller.devices.arduino.arduino import Arduino
 
 rm = pyvisa.ResourceManager('@py')
 
-from time import sleep
-
-from dispertech.controller.devices.arduino.arduino import Arduino
-
 
 class ArduinoModel:
-    def __init__(self, port=None):
+    def __init__(self, port=None, device=0):
+        """ Use the port if you know where the Arduino is connected, or use the device number in the order shown by
+        pyvisa.
+        """
         self._threads = []
         self._stop_temperature = Event()
         self.temp_electronics = 0
@@ -29,6 +31,7 @@ class ArduinoModel:
         self.query_lock = RLock()
         self.driver = None
         self.port = port
+        self.device = device
 
         self.logger = get_logger()
 
@@ -36,7 +39,7 @@ class ArduinoModel:
     def initialize(self):
         with self.query_lock:
             if not self.port:
-                port = Arduino.list_devices()[0]
+                port = Arduino.list_devices()[self.device]
             self.driver = rm.open_resource(port, baud_rate=19200)
             sleep(2)
             try:
@@ -123,6 +126,10 @@ class ArduinoModel:
                 self.temp_electronics = float(self.driver.query("TEM:0"))
                 self.temp_sample = float(self.driver.query("TEM:1"))
             sleep(5)
+
+    def move_servo(self, position: int):
+        with self.query_lock:
+            self.driver.query(f"serv:{position}")
 
     def finalize(self):
         self._stop_temperature.set()

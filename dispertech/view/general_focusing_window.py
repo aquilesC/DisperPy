@@ -5,25 +5,27 @@ from PyQt5 import uic, QtGui
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QMainWindow, QShortcut
 
+from dispertech.util.log import get_logger
 from dispertech.view import VIEW_BASE_DIR
 
 import dispertech.view.GUI.resources
 from experimentor.views.camera.camera_viewer_widget import CameraViewerWidget
 
 
-class LaserFocusingWindow(QMainWindow):
+class GeneralFocusingWindow(QMainWindow):
     def __init__(self, experiment=None):
-        super(LaserFocusingWindow, self).__init__()
+        super(GeneralFocusingWindow, self).__init__()
+        self.logger = get_logger(__name__)
         self.experiment = experiment
         uic.loadUi(os.path.join(VIEW_BASE_DIR, 'GUI', 'Fiber_End_Window.ui'), self)
 
         layout = self.camera_widget.layout()
-        self.camera_fiber = CameraViewerWidget()
-        layout.addWidget(self.camera_fiber)
+        self.camera_widget = CameraViewerWidget()
+        layout.addWidget(self.camera_widget)
 
         # Setting status of fiber LED
-        self.fiber_led = 0
-        self.toggle_fiber_led()
+        self.led = 0
+        self.toggle_led()
 
         # Switching the laser off
         self.servo_status = 1
@@ -32,8 +34,9 @@ class LaserFocusingWindow(QMainWindow):
         # Setting the speed
         self.fine_speed = 1
         self.coarse_speed = 50
+        self.speed = self.fine_speed
         self.set_fine_movement()
-        self.set_camera_low()
+        # self.set_camera_low()
 
         # Connecting the buttons and actions
         self.button_fine_movement.clicked.connect(self.set_fine_movement)
@@ -56,13 +59,13 @@ class LaserFocusingWindow(QMainWindow):
         self.button_camera_low.clicked.connect(self.set_camera_low)
         self.button_camera_high.clicked.connect(self.set_camera_high)
 
-        self.button_fiber_led.clicked.connect(self.toggle_fiber_led)
+        self.button_fiber_led.clicked.connect(self.toggle_led)
 
         self.button_laser.clicked.connect(self.toggle_servo)
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_image)
-        self.timer.start(50)
+        self.timer.start(30)
 
     def set_fine_movement(self):
         self.speed = self.fine_speed
@@ -108,12 +111,12 @@ class LaserFocusingWindow(QMainWindow):
     def update_image(self):
         image = self.experiment.cameras[0].temp_image
         if not image is None:
-            self.camera_fiber.update_image(image)
+            self.camera_widget.update_image(image)
 
-    def toggle_fiber_led(self):
-        self.fiber_led = 0 if self.fiber_led else 1
-        self.experiment.electronics.fiber_led = self.fiber_led
-        if self.fiber_led:
+    def toggle_led(self):
+        self.led = 0 if self.led else 1
+        self.experiment.electronics.fiber_led = self.led
+        if self.led:
             self.button_fiber_led.setStyleSheet("background-color: green")
         else:
             self.button_fiber_led.setStyleSheet("background-color: red")
@@ -133,6 +136,7 @@ class LaserFocusingWindow(QMainWindow):
         self.timer.stop()
         self.experiment.cameras[0].stop_free_run()
         super().closeEvent(a0)
+
 
 if __name__ == '__main__':
     from PyQt5.QtWidgets import QApplication

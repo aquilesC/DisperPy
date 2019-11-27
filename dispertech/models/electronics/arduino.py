@@ -137,6 +137,7 @@ class ArduinoModel:
         self.top_led = 0
         self.laser_power(0)
 
+
 if __name__ == "__main__":
     dev = Arduino.list_devices()[0]
     ard = ArduinoModel(dev)

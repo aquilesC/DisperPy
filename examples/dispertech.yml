@@ -108,5 +108,13 @@ laser_focusing:
     exposure_time: 50ms
     gain: 18
   low:
-    exposure_time: 3ms
+    exposure_time: 1ms
+    gain: 0
+
+microscope_focusing:
+  high:
+    exposure_time: 100ms
+    gain: 24
+  low:
+    exposure_time: 1ms
     gain: 0

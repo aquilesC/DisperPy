@@ -34,7 +34,7 @@ import h5py
 import numpy as np
 from datetime import datetime
 
-from experimentor.config.settings import PUBLISHER_PUBLISH_PORT, SUBSCRIBER_EXIT_KEYWORD
+from experimentor.config import settings
 from experimentor.lib.log import get_logger
 
 
@@ -42,7 +42,7 @@ class VideoSaver(Process):
     def __init__(self, file_path, meta, topic, max_memory=150):
         super().__init__()
         self.logger = get_logger(name=__name__)
-        self.logger.info('Starting worker saver for topic {} on port {}'.format(topic, PUBLISHER_PUBLISH_PORT))
+        self.logger.info('Starting worker saver for topic {} on port {}'.format(topic, settings.PUBLISHER_PUBLISH_PORT))
         self.file_path = file_path
         self.meta = meta
         self.topic = topic
@@ -51,7 +51,7 @@ class VideoSaver(Process):
     def run(self):
         context = zmq.Context()
         socket = context.socket(zmq.SUB)
-        socket.connect("tcp://localhost:{}".format(PUBLISHER_PUBLISH_PORT))
+        socket.connect("tcp://localhost:{}".format(settings.PUBLISHER_PUBLISH_PORT))
         topic_filter = self.topic.encode('ascii')
         socket.setsockopt(zmq.SUBSCRIBE, topic_filter)
         allocate_memory = self.max_memory  # megabytes of memory to allocate on the hard drive.

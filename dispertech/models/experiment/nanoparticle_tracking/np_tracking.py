@@ -13,16 +13,22 @@ from dispertech.models.experiment.nanoparticle_tracking import NO_CORRECTION
 from dispertech.models.experiment.nanoparticle_tracking.decorators import make_async_thread
 from dispertech.models.experiment.nanoparticle_tracking.exceptions import StreamSavingRunning
 from dispertech.models.experiment.nanoparticle_tracking.localization import calculate_locations_image
-from dispertech.models.experiment.nanoparticle_tracking.saver import VideoSaver
+from dispertech.models.experiment.nanoparticle_tracking.saver import VideoSaver, worker_listener
 from experimentor import general_stop_event
-from experimentor.config.settings import SUBSCRIBER_EXIT_KEYWORD
+from experimentor.config import settings
+from experimentor.core.signal import Signal
 from experimentor.lib.log import get_logger
-from experimentor.models.experiments.base_experiment import BaseExperiment
+from experimentor.models.experiments.base_experiment import Experiment
 from experimentor.models.listener import Listener
-from experimentor.models.subscriber import Subscriber
+from experimentor.core.subscriber import Subscriber
 
 
-class NPTracking(BaseExperiment):
+class NPTracking(Experiment):
+    """ Nanoparticle tracking experiment.
+    """
+
+    stop = Signal()
+
     def __init__(self, filename=None):
         super().__init__(filename)
         self.save_stream_running = False
@@ -327,7 +333,7 @@ class NPTracking(BaseExperiment):
     @make_async_thread
     def stop_tracking(self):
         id = self.cameras[1].id
-        self.listener.publish(SUBSCRIBER_EXIT_KEYWORD, f"{id}_free_run")
+        self.listener.publish(settings.SUBSCRIBER_EXIT_KEYWORD, f"{id}_free_run")
         while self.localize.is_alive():
             time.sleep(0.02)
         self.logger.info('Tracking Stopped')
@@ -403,7 +409,7 @@ class NPTracking(BaseExperiment):
         self.saver.start()
 
     def stop_saving(self):
-        self.listener.publish(SUBSCRIBER_EXIT_KEYWORD, f'{self.cameras[1].id}_free_run')
+        self.listener.publish(settings.SUBSCRIBER_EXIT_KEYWORD, f'{self.cameras[1].id}_free_run')
 
     def servo_off(self):
         """ Move the servo to block the beam. To avoid problems, first put the laser to 0 power.
@@ -426,8 +432,14 @@ class NPTracking(BaseExperiment):
         except Exception as e:
             self.logger.error(e)
         time.sleep(.5)
-        self.stop_save_stream()
-        self.stop_saving()
+        try:
+            self.stop_save_stream()
+        except Exception as e:
+            self.logger.error(e)
+        try:
+            self.stop_saving()
+        except Exception as e:
+            self.logger.error(e)
         try:
             self.electronics.finalize()
         except Exception as e:

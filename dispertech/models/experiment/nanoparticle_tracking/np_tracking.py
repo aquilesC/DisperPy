@@ -26,7 +26,6 @@ from experimentor.core.subscriber import Subscriber
 class NPTracking(Experiment):
     """ Nanoparticle tracking experiment.
     """
-
     stop = Signal()
 
     def __init__(self, filename=None):
@@ -312,6 +311,7 @@ class NPTracking(Experiment):
             self.publisher.publish('free_run', 'stop')
             return
         self.logger.info('The saving stream is not running. Nothing will be done.')
+
 
     def start_tracking(self):
         """ Starts the tracking of the particles

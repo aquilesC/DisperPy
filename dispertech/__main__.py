@@ -10,9 +10,9 @@ from dispertech.view.start_window import StartWindow
 
 def main():
     logger = get_logger()  # 'nanoparticle_tracking.model.experiment.nanoparticle_tracking.saver'
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
+    ch.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     ch.setFormatter(formatter)
     logger.addHandler(ch)

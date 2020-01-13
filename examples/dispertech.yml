@@ -7,10 +7,10 @@ user:
   name: Aquiles
 
 arduino:
-  device: 1
+  device: 0
 
 servo: # This is a temp fix to control the servo with a different Arduino
-  device: 0
+  device: 1
 
 saving:
   auto_save: False

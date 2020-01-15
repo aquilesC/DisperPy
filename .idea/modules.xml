@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Dispertech.iml" filepath="$PROJECT_DIR$/.idea/Dispertech.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../experimentor/.idea/experimentor.iml" filepath="$PROJECT_DIR$/../experimentor/.idea/experimentor.iml" />
     </modules>
   </component>
 </project>

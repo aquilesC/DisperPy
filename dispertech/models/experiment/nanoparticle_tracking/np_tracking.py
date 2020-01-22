@@ -1,12 +1,12 @@
 import importlib
 import json
 import os
-from datetime import datetime
+from multiprocessing import Queue, Event, Process
 
 import h5py
 import numpy as np
 import time
-from multiprocessing import Queue, Event, Process
+from datetime import datetime
 
 from dispertech.models.electronics.arduino import ArduinoModel
 from dispertech.models.experiment.nanoparticle_tracking import NO_CORRECTION
@@ -17,10 +17,8 @@ from dispertech.models.experiment.nanoparticle_tracking.saver import VideoSaver,
 from experimentor import general_stop_event
 from experimentor.config import settings
 from experimentor.core.signal import Signal
-from experimentor.lib.log import get_logger
-from experimentor.models.experiments.base_experiment import Experiment
-from experimentor.models.listener import Listener
 from experimentor.core.subscriber import Subscriber
+from experimentor.models.experiments.base_experiment import Experiment
 
 
 class NPTracking(Experiment):
@@ -311,7 +309,6 @@ class NPTracking(Experiment):
             self.publisher.publish('free_run', 'stop')
             return
         self.logger.info('The saving stream is not running. Nothing will be done.')
-
 
     def start_tracking(self):
         """ Starts the tracking of the particles

@@ -84,8 +84,6 @@ class Camera(BaseCamera):
 
             self.logger.info(f'Loaded camera {self.camera.GetDeviceInfo().GetModelName()}')
 
-
-
             self.camera.RegisterConfiguration(pylon.SoftwareTriggerConfiguration(), pylon.RegistrationMode_ReplaceAll,
                                               pylon.Cleanup_Delete)
             self.clear_ROI()
@@ -121,11 +119,19 @@ class Camera(BaseCamera):
         self.get_exposure()
 
     def set_auto_exposure(self, mode: str):
+        """Set auto exposure. Possible modes are Off, Once, Continuous"""
         possible_modes = ('Off', 'Once', 'Continuous')
-        if not mode in possible_modes:
-            raise ValueError(f'Mode must be one of {possible_modes}')
+        if mode not in possible_modes:
+            raise ValueError(f'Mode must be one of {possible_modes} and not {mode}')
 
         self.camera.ExposureAuto.SetValue(mode)
+
+    def set_auto_gain(self, mode: str):
+        """Set the auto gain. Possible modes are Off, Once, Continuous"""
+        possible_modes = ('Off', 'Once', 'Continuous')
+        if mode not in possible_modes:
+            raise ValueError(f'Mode must be one of {possible_modes} and not {mode}')
+        self.camera.GainAuto.SetValue(mode)
 
     def auto_gain(self):
         self.camera.GainAuto.SetValue('Off')
@@ -149,10 +155,10 @@ class Camera(BaseCamera):
             self.logger.info('Changing ROI while free running')
             sleep(0.002)
 
-        width = int(X[1]-X[1]%4)
-        x_pos = int(X[0]-X[0]%4)
-        height = int(Y[1]-Y[1]%2)
-        y_pos = int(Y[0]-Y[0]%2)
+        width = int(X[1] - X[1] % 4)
+        x_pos = int(X[0] - X[0] % 4)
+        height = int(Y[1] - Y[1] % 2)
+        y_pos = int(Y[0] - Y[0] % 2)
         self.logger.info(f'Updating ROI: (x, y, width, height) = ({x_pos}, {y_pos}, {width}, {height})')
         # if x_pos+width-1 > self.max_width:
         #     raise CameraException('ROI width bigger than camera area')
@@ -169,8 +175,8 @@ class Camera(BaseCamera):
         self.camera.OffsetX.SetValue(x_pos)
         self.logger.debug(f'Setting Y offset to {y_pos}')
         self.camera.OffsetY.SetValue(y_pos)
-        self.X = (x_pos, x_pos+width)
-        self.Y = (y_pos, y_pos+width)
+        self.X = (x_pos, x_pos + width)
+        self.Y = (y_pos, y_pos + width)
         self.width = self.camera.Width.Value
         self.height = self.camera.Height.Value
         return (x_pos, width), (y_pos, height)

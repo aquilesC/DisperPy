@@ -9,7 +9,7 @@ camera:
   init: daA1280 # Initial arguments to pass when creating the camera
   model_camera: Dart # To keep a registry of which camera was used in the experiment
   exposure_time: 30ms # Initial exposure time (in ms)
-  gain: 0 # Initial gain
+  gain: 15 # Initial gain
 
 electronics:
   device: 0

@@ -51,21 +51,6 @@ def check_not_acquiring(func):
     return func_wrapper
 
 
-def make_async_thread(func):
-    """ Simple decorator to make a method run on a separated thread. It requires that the class has a property
-    called ``_threads`` which is a list and holds all the running threads.
-    """
-    @wraps(func)
-    def func_wrapper(*args, **kwargs):
-        logger = get_logger(name=__name__)
-        logger.info('Starting new thread for {}'.format(func.__name__))
-        args[0]._threads.append([func.__name__, Thread(target=func, args=args, kwargs=kwargs)])
-        args[0]._threads[-1][1].start()
-        logger.debug('In total there are {} threads'.format(len(args[0]._threads)))
-
-    return func_wrapper
-
-
 def make_async_process(func):
     """ Simple decorator to start a method as a separated process. It requires that the class has a property
     called ``_processes`` which is a list and holds all the running processes.

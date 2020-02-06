@@ -10,7 +10,6 @@ from datetime import datetime
 
 from dispertech.models.electronics.arduino import ArduinoModel
 from dispertech.models.experiment.nanoparticle_tracking import NO_CORRECTION
-from dispertech.models.experiment.nanoparticle_tracking.decorators import make_async_thread
 from dispertech.models.experiment.nanoparticle_tracking.exceptions import StreamSavingRunning
 from dispertech.models.experiment.nanoparticle_tracking.localization import calculate_locations_image
 from dispertech.models.experiment.nanoparticle_tracking.saver import VideoSaver, worker_listener
@@ -18,6 +17,7 @@ from experimentor import general_stop_event
 from experimentor.config import settings
 from experimentor.core.signal import Signal
 from experimentor.core.subscriber import Subscriber
+from experimentor.models.decorators import make_async_thread
 from experimentor.models.experiments.base_experiment import Experiment
 
 

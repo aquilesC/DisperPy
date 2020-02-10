@@ -23,11 +23,11 @@ from time import sleep
 import numpy as np
 from pypylon import pylon
 
-from dispertech.models.experiment.nanoparticle_tracking.decorators import make_async_thread
 from experimentor.models.cameras.base_camera import BaseCamera
 from experimentor.models.cameras.exceptions import CameraNotFound, WrongCameraState, CameraException
 from dispertech.util.log import get_logger
 from experimentor import Q_
+from experimentor.models.decorators import make_async_thread
 from experimentor.models.listener import Listener
 
 

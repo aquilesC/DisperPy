@@ -13,8 +13,8 @@ from pyvisa import VisaIOError
 
 from experimentor.lib.log import get_logger
 
-from dispertech.models.experiment.nanoparticle_tracking.decorators import make_async_thread
 from dispertech.controller.devices.arduino.arduino import Arduino
+from experimentor.models.decorators import make_async_thread
 
 rm = pyvisa.ResourceManager('@py')
 

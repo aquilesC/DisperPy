@@ -34,7 +34,7 @@ int Power_LED = 30;
 int Top_LED = 42;
 int Servo_PIN = 13;
 int Servo_ON = 1;
-int Servo_OFF = 10;
+int Servo_OFF = 15;
 int Measure_LED = 44;
 byte rx_byte = 0;        // stores received byte
 

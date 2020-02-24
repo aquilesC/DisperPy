@@ -1,0 +1,34 @@
+sample:
+  cartridge_number: 1900000
+  sample: Description
+  folder: D:\\Data\\Dispertech
+
+fiber_focus:
+  camera:
+    exposure: 30ms
+    gain: 10
+
+microscope_focus:
+  camera:
+    exposure: 30ms
+    gain: 0
+    roi: [0, 0, None, None]
+
+measurement:
+  camera:
+    exposure: 30ms
+    gain: 16
+    roi: [0, 0, None, None]
+  laser:
+    power: 50
+
+analysis:
+  locations:
+    file: None
+    threshold: 5
+    background: None
+  size:
+    file: None
+    viscosity: 8.9E-4 Pa*s
+  cartrdige: 1900000
+  sample: Description

@@ -108,9 +108,11 @@ class Camera(BaseCamera):
             self.camera.AcquisitionMode.SetValue('Continuous')
             self.mode = mode
         elif mode == self.MODE_SINGLE_SHOT:
+            self.logger.debug(f'Setting buffer to 1')
+            self.camera.OutputQueueSize = 1
             self.camera.AcquisitionMode.SetValue('SingleFrame')
             self.mode = mode
-
+        self.logger.info('Starting Acquisition')
         self.camera.AcquisitionStart.Execute()
 
     def auto_exposure(self):

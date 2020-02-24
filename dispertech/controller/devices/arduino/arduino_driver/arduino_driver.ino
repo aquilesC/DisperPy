@@ -133,9 +133,26 @@ void loop() {
       }
       rx_byte = Serial.read();
       Serial1.write(rx_byte);
-      delay(piezo_delay);
-      rx_byte = 0;
-      Serial1.write(rx_byte);
+
+      bool is_step = true;
+      for (int bits = 5; bits > 0; bits--) {
+        if (rx_byte & (1 << bits)) {
+          is_step = false;
+        }
+      }
+      if (!(rx_byte & (1 << 0))) {
+        is_step = false;
+      }
+      if (!(rx_byte & (1 << 7)) && is_step) {
+        delay(piezo_delay / 2);
+        Serial1.write(rx_byte);
+        printOut1(rx_byte);
+      }
+      if (!is_step) {
+        delay(piezo_delay);
+        rx_byte = 0;
+        Serial1.write(rx_byte);
+      }
       Serial.println("OK");
     }
     else if (Comm.startsWith("mot2")) {
@@ -145,9 +162,25 @@ void loop() {
       }
       rx_byte = Serial.read();
       Serial2.write(rx_byte);
-      delay(piezo_delay);
-      rx_byte = 0;
-      Serial2.write(rx_byte);
+      bool is_step = true;
+      for (int bits = 5; bits > 0; bits--) {
+        if (rx_byte & (1 << bits)) {
+          is_step = false;
+        }
+      }
+      if (!(rx_byte & (1 << 0))) {
+        is_step = false;
+      }
+      if (!(rx_byte & (1 << 7)) && is_step) {
+        delay(piezo_delay / 2);
+        Serial2.write(rx_byte);
+        printOut1(rx_byte);
+      }
+      if (!is_step) {
+        delay(piezo_delay);
+        rx_byte = 0;
+        Serial2.write(rx_byte);
+      }
       Serial.println("OK");
     }
     else if (Comm.startsWith("OUT")) {
@@ -182,4 +215,16 @@ void loop() {
     Comm = "";
   }
   delay(2);
+}
+
+void printOut1(int c) {
+  for (int bits = 7; bits > -1; bits--) {
+    // Compare bits 7-0 in byte
+    if (c & (1 << bits)) {
+      Serial.print ("1");
+    }
+    else {
+      Serial.print ("0");
+    }
+  }
 }

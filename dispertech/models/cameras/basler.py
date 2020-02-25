@@ -222,6 +222,7 @@ class Camera(BaseCamera):
         self._temp_image = image
 
     def set_gain(self, gain: float) -> float:
+        self.logger.info(f'Setting gain to {gain}')
         self.camera.Gain.SetValue(gain)
         return self.get_gain()
 
@@ -230,6 +231,7 @@ class Camera(BaseCamera):
         return self.gain
 
     def set_exposure(self, exposure: Q_) -> Q_:
+        self.logger.info('Setting exposure to {:~}'.format(exposure))
         self.camera.ExposureTime.SetValue(exposure.m_as('us'))
         return self.get_exposure()
 
@@ -316,6 +318,7 @@ class Camera(BaseCamera):
         return id(self)
 
     def set_pixel_format(self, format):
+        self.logger.info(f'Setting pixel format to {format}')
         self.camera.PixelFormat = format
 
     def __str__(self):

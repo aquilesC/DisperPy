@@ -209,17 +209,17 @@ class Camera(BaseCamera):
                 self.camera.StartGrabbing(1)
         self.camera.ExecuteSoftwareTrigger()
 
-    @property
-    def temp_image(self):
-        if self._temp_image is not None:
-            img = np.copy(self._temp_image)
-            self._temp_image = None
-            return img
-        return self._temp_image
-
-    @temp_image.setter
-    def temp_image(self, image):
-        self._temp_image = image
+    # @property
+    # def temp_image(self):
+    #     if self._temp_image is not None:
+    #         img = np.copy(self._temp_image)
+    #         self._temp_image = None
+    #         return img
+    #     return self._temp_image
+    #
+    # @temp_image.setter
+    # def temp_image(self, image):
+    #     self._temp_image = image
 
     def set_gain(self, gain: float) -> float:
         self.logger.info(f'Setting gain to {gain}')

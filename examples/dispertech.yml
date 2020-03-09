@@ -6,7 +6,7 @@
 user:
   name: Aquiles
 
-arduino:
+electronics:
   device: 0
 
 servo: # This is a temp fix to control the servo with a different Arduino

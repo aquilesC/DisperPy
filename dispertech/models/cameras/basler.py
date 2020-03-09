@@ -64,7 +64,7 @@ class Camera(BaseCamera):
 
         """
         with self.initialize_lock:
-            self.logger.debug('Initializing Basler Camera')
+            self.logger.debug(f'Initializing Basler Camera {self.cam_num}')
             tl_factory = pylon.TlFactory.GetInstance()
             devices = tl_factory.EnumerateDevices()
             if len(devices) == 0:

@@ -128,6 +128,12 @@ class ArduinoModel:
             sleep(5)
 
     def move_servo(self, position: int):
+        """Moves the servo to position either 0 (off) or 1 (on).
+        The angle the servo moves is coded directly on the electronics code.
+
+        .. TODO:: Perhaps is best to have flexibility and provide the position as a parameter in Python instead of
+            low-level determining it.
+        """
         with self.query_lock:
             self.driver.query(f"serv:{position}")
 

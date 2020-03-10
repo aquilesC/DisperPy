@@ -99,17 +99,14 @@ debug:
   to_screen: True
 
 sample:
-  name: a123
-  description: Short Description
-  cartrdige_number: 19NNMM
+  sample: a123
+  data_folder: path/to/folder
+  cartridge: 19NNMM
 
 laser_focusing:
-  high:
-    exposure_time: 50ms
-    gain: 18
-  low:
-    exposure_time: .01ms
-    gain: 0
+  exposure_time: 50ms
+  gain: 18
+
 
 microscope_focusing:
   high:
@@ -118,3 +115,7 @@ microscope_focusing:
   low:
     exposure_time: 1ms
     gain: 0
+
+core_options:
+  data_folder: /path/to/data/folder
+  fiber_end_image_name: 'fiber_end_{cartridge}_{i:04}.npy'

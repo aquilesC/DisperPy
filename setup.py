@@ -27,7 +27,7 @@ setup(
     ],
     include_package_data=True,
     install_requires=[
-        # 'pyqt5',
+        'pyqt5',
         'numpy',
         'pyqtgraph',
         'pint',
@@ -40,7 +40,8 @@ setup(
         'pyvisa',
         'pyvisa-py',
         'experimentor',
-        'numba'
+        'numba',
+        'scipy',
     ],
     long_description=long_description,
     long_description_content_type="text/markdown",

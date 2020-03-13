@@ -5,8 +5,6 @@
     <orderEntry type="jdk" jdkName="Python 3.7 (DispertPy)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="experimentor" />
-  </component>
-  <component name="TestRunnerService">
-    <option name="PROJECT_TEST_RUNNER" value="Unittests" />
+    <orderEntry type="module" module-name="DisperScripts" />
   </component>
 </module>

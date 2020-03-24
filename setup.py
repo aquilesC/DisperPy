@@ -40,7 +40,6 @@ setup(
         'pyvisa',
         'pyvisa-py',
         'experimentor',
-        'numba',
         'scipy',
     ],
     long_description=long_description,

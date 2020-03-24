@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 import numpy as np
 
@@ -13,6 +14,8 @@ class Dispertech(Experiment):
     def __init__(self, config_file=None):
         super().__init__(filename=config_file)
         self.cameras = dict(camera_microscope=None, camera_fiber=None)
+        self.camera_microscope = Camera(self.config['camera_microscope']['init'])
+        self.camera_fiber = Camera(self.config['camera_fiber']['init'])
         self.electronics = dict(servo=None, main_electronics=None)
         self.initializing = None  # None means has not been initialized, True means is happening, False means it's done
 
@@ -21,10 +24,7 @@ class Dispertech(Experiment):
         It also sets some sensible parameters for the purposes of the experiment at hand, for example it disables auto
         exposure and auto gain.
         """
-        self.cameras['camera_microscope'] = Camera(self.config['camera_microscope']['init'])
-        self.cameras['camera_fiber'] = Camera(self.config['camera_fiber']['init'])
-
-        for cam in self.cameras.values():
+        for cam in (self.camera_fiber, self.camera_microscope):
             cam.initialize()
             cam.set_auto_exposure('Off')
             cam.set_auto_gain('Off')
@@ -62,7 +62,36 @@ class Dispertech(Experiment):
         self.cameras['camera_fiber'].configure(self.config['camera_fiber'])
         self.cameras['camera_fiber'].start_free_run()
 
-    def done_fiber_focus(self, X: float, Y:float):
+    @make_async_thread
+    def start_microscope_focus(self):
+        """ Starts the microscope focusing procedure. It switches off the laser, and switches on the LED from the top
+        in order to see the fiber core on the microscope camera.
+        """
+        self.cameras['camera_fiber'].stop_camera()
+        self.electronics['main_electronics'].fiber_led = 0
+        self.electronics['main_electronics'].top_led = 1
+        self.electronics['main_electronics'].laser_power = 0
+        self.electronics['servo'].move_servo(0)
+        self.config['camera_microscope'].update(self.config['microscope_focus'])
+        self.cameras['camera_microscope'].stop_camera()
+        self.cameras['camera_microscope'].configure(self.config['camera_microscope'])
+        self.cameras['camera_microscope'].start_free_run()
+
+    def crop_microscope_image(self, y: List[float]):
+        """Sets the ROI on the microscope camera"""
+        y.sort()
+
+        self.config['camera_microscope']['roi_y1'] = int(y[0])
+        self.config['camera_microscope']['roi_y2'] = int(y[1])
+        self.cameras['camera_microscope'].stop_camera()
+        self.cameras['camera_microscope'].configure(self.config['camera_microscope'])
+        self.cameras['camera_microscope'].start_free_run()
+
+    def clear_microscope_crop(self):
+        self.config['camera_microscope'].stop_camera()
+        self.config['camera_microscope'].clear_ROI()
+
+    def done_fiber_focus(self, x: float, y:float):
         """ When the focusing is done, the user must click close to the fiber core in order to record it's position.
         This, in turn, will trigger the focusing of the laser on the fiber end. The position of the center clicked by
         the user must be passed as floats to this method, which will then find the closest maximum in intensity.
@@ -82,7 +111,7 @@ class Dispertech(Experiment):
         np.save(os.path.join(folder, filename), last_image)
 
         # Crop a small square around the coordinates supplied
-        cropped_image = np.copy(last_image[X-15:X+15, Y-15:Y+15])
+        cropped_image = np.copy(last_image[x-15:x+15, y-15:y+15])
         cropped_image[cropped_image<np.mean(cropped_image)+np.std(cropped_image)] = 0
         params = fitgaussian(cropped_image)
 

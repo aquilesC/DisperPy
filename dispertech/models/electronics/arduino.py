@@ -5,21 +5,24 @@
     and some LED's.
 """
 from multiprocessing import Event
-from threading import RLock
-from time import sleep
 
 import pyvisa
 from pyvisa import VisaIOError
-
-from experimentor.lib.log import get_logger
+from threading import RLock
+from time import sleep
 
 from dispertech.controller.devices.arduino.arduino import Arduino
+from experimentor.core.signal import Signal
+from experimentor.lib.log import get_logger
 from experimentor.models.decorators import make_async_thread
+from experimentor.models.models import ModelDevice
 
 rm = pyvisa.ResourceManager('@py')
 
 
-class ArduinoModel:
+class ArduinoModel(ModelDevice):
+    init = Signal()
+
     def __init__(self, port=None, device=0):
         """ Use the port if you know where the Arduino is connected, or use the device number in the order shown by
         pyvisa.

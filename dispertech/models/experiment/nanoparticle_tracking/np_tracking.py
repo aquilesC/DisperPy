@@ -12,7 +12,7 @@ from dispertech.models.electronics.arduino import ArduinoModel
 from dispertech.models.experiment.nanoparticle_tracking import NO_CORRECTION
 from dispertech.models.experiment.nanoparticle_tracking.exceptions import StreamSavingRunning
 from dispertech.models.experiment.nanoparticle_tracking.localization import calculate_locations_image
-from dispertech.models.experiment.nanoparticle_tracking.saver import VideoSaver, worker_listener
+from dispertech.models.experiment.nanoparticle_tracking.saver import VideoSaver, worker_pusher
 from experimentor import general_stop_event
 from experimentor.config import settings
 from experimentor.core.signal import Signal
@@ -227,7 +227,7 @@ class NPTracking(Experiment):
         camera.set_acquisition_mode(self.camera.MODE_SINGLE_SHOT)
         camera.trigger_camera()
         data = camera.read_camera()[-1]
-        self.publisher.publish('snap', data)
+        self.pusher.publish('snap', data)
         self.temp_image[cam] = data
         self.logger.debug('Got an image of {}x{} pixels'.format(data.shape[0], data.shape[1]))
 
@@ -294,7 +294,7 @@ class NPTracking(Experiment):
         file_path = os.path.join(file_dir, file_name)
         max_memory = self.config['saving']['max_memory']
 
-        self.stream_saving_process = Process(target=worker_listener,
+        self.stream_saving_process = Process(target=worker_pusher,
                                              args=(file_path, json.dumps(self.config), 'free_run'),
                                              kwargs={'max_memory': max_memory})
         self.stream_saving_process.start()
@@ -306,7 +306,7 @@ class NPTracking(Experiment):
         if self.save_stream_running:
             self.logger.info('Stopping the saving stream process')
             self.saver_queue.put('Exit')
-            self.publisher.publish('free_run', 'stop')
+            self.pusher.publish('free_run', 'stop')
             return
         self.logger.info('The saving stream is not running. Nothing will be done.')
 
@@ -330,7 +330,7 @@ class NPTracking(Experiment):
     @make_async_thread
     def stop_tracking(self):
         id = self.cameras[1].id
-        self.listener.publish(settings.SUBSCRIBER_EXIT_KEYWORD, f"{id}_free_run")
+        self.pusher.publish(settings.SUBSCRIBER_EXIT_KEYWORD, f"{id}_free_run")
         while self.localize.is_alive():
             time.sleep(0.02)
         self.logger.info('Tracking Stopped')
@@ -392,7 +392,7 @@ class NPTracking(Experiment):
             wf = np.array([np.sum(image[:, center_pixel - vbinhalf:center_pixel + vbinhalf], 1)])
         self.waterfall_data[self.waterfall_index, :] = wf
         self.waterfall_index += 1
-        self.publisher.publish('waterfall_data', wf)
+        self.pusher.publish('waterfall_data', wf)
 
     def start_saving(self):
         if self.saver and self.saver.is_alive():
@@ -406,7 +406,7 @@ class NPTracking(Experiment):
         self.saver.start()
 
     def stop_saving(self):
-        self.listener.publish(settings.SUBSCRIBER_EXIT_KEYWORD, f'{self.cameras[1].id}_free_run')
+        self.pusher.publish(settings.SUBSCRIBER_EXIT_KEYWORD, f'{self.cameras[1].id}_free_run')
 
     def servo_off(self):
         """ Move the servo to block the beam. To avoid problems, first put the laser to 0 power.

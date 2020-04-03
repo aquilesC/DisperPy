@@ -10,25 +10,20 @@
     The program forces software trigger during :meth:`~experimentor.model.cameras.basler.Camera.initialize`.
 """
 import logging
-from threading import Lock
-
-from dispertech.models.cameras import _basler_lock
-
 import time
-
 from multiprocessing import Event
+from threading import Lock
 from typing import Tuple
-from time import sleep
 
 import numpy as np
-from pypylon import pylon
-
-from experimentor.models.cameras.base_camera import BaseCamera
-from experimentor.models.cameras.exceptions import CameraNotFound, WrongCameraState, CameraException
+from dispertech.models.cameras import _basler_lock
 from dispertech.util.log import get_logger
 from experimentor import Q_
+from experimentor.core.pusher import Pusher
+from experimentor.models.cameras.base_camera import BaseCamera
+from experimentor.models.cameras.exceptions import CameraNotFound, WrongCameraState
 from experimentor.models.decorators import make_async_thread
-from experimentor.models.listener import Listener
+from pypylon import pylon
 
 
 class Camera(BaseCamera):
@@ -47,7 +42,7 @@ class Camera(BaseCamera):
         self._stop_free_run = Event()
         self.free_run_running = False
         self._temp_image = None
-        self.listener = Listener()
+        self.pusher = Pusher()
         self.fps = 0
         self.i = 0  # Number of frames acquired
         self.gain = 0
@@ -155,7 +150,7 @@ class Camera(BaseCamera):
         self._stop_free_run.set()
         while self.free_run_running:
             self.logger.info('Changing ROI while free running')
-            sleep(0.002)
+            time.sleep(0.002)
 
         width = int(X[1] - X[1] % 4)
         x_pos = int(X[0] - X[0] % 4)
@@ -293,9 +288,9 @@ class Camera(BaseCamera):
                     # This will broadcast the data just acquired with the current timestamp
                     # The timestamp is very unreliable, especially if the camera has a frame grabber.
                     # self.publisher.publish('free_run', [time.time(), img])
-                    self.listener.publish(img, f'{self.id}_free_run')
+                    self.pusher.publish(img, f'{self.id}_free_run')
                 self.fps = round(self.i / (time.time() - t0))
-                sleep(exposure.m_as('s'))
+                time.sleep(exposure.m_as('s'))
                 self.temp_image = img
         except Exception as e:
             self.free_run_running = False
@@ -306,7 +301,7 @@ class Camera(BaseCamera):
 
     def stop_free_run(self):
         self._stop_free_run.set()
-        sleep(0.05)
+        time.sleep(0.005)
 
     def stop_camera(self):
         self.logger.info('Stopping camera')
@@ -321,16 +316,21 @@ class Camera(BaseCamera):
         self.logger.info(f'Setting pixel format to {format}')
         self.camera.PixelFormat = format
 
+    def finalize(self):
+        super().finalize()
+        self.stop_free_run()
+        self.stop_camera()
+        self.clean_up_threads()
+        if len(self._threads) > 0:
+            self.logger.warning(f'There are {len(self._threads)} threads still alive in {self.friendly_name}')
+            time.sleep(1)
+            self.finalize()
+
+
     def __str__(self):
         if self.friendly_name:
             return self.friendly_name
         return "Basler Camera"
-
-    def __del__(self):
-        try:
-            self.camera.Close()
-        except:
-            pass
 
 
 if __name__ == '__main__':
@@ -353,7 +353,7 @@ if __name__ == '__main__':
     print(len(basler.read_camera()))
     basler.set_acquisition_mode(basler.MODE_CONTINUOUS)
     basler.trigger_camera()
-    sleep(1)
+    time.sleep(1)
     imgs = basler.read_camera()
     print(len(imgs))
     for img in imgs:

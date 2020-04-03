@@ -27,7 +27,7 @@ setup(
     ],
     include_package_data=True,
     install_requires=[
-        'pyqt5',
+        # 'pyqt5',
         'numpy',
         'pyqtgraph',
         'pint',

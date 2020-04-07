@@ -5,7 +5,7 @@ import numpy as np
 
 from dispertech.models.cameras.basler import Camera
 from dispertech.models.electronics.arduino import ArduinoModel
-from dispertech.models.gaussian_fit import fitgaussian
+from experimentor.lib import fitgaussian
 from experimentor.models.decorators import make_async_thread
 from experimentor.models.experiments.base_experiment import Experiment, FormatDict
 

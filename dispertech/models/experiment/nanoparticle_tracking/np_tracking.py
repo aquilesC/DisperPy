@@ -12,7 +12,7 @@ from dispertech.models.electronics.arduino import ArduinoModel
 from dispertech.models.experiment.nanoparticle_tracking import NO_CORRECTION
 from dispertech.models.experiment.nanoparticle_tracking.exceptions import StreamSavingRunning
 from dispertech.models.experiment.nanoparticle_tracking.localization import calculate_locations_image
-from dispertech.models.experiment.nanoparticle_tracking.saver import VideoSaver, worker_pusher
+from dispertech.models.experiment.nanoparticle_tracking.saver import VideoSaver, worker_listener
 from experimentor import general_stop_event
 from experimentor.config import settings
 from experimentor.core.signal import Signal
@@ -151,7 +151,7 @@ class NPTracking(Experiment):
         """ Loads the electronics controller. It is an Arduino microcontroller with extra build-in electronics to
         control the movement of a mirror mounted on Piezos.
         """
-        self.electronics = ArduinoModel(**self.config['arduino'])
+        self.electronics = ArduinoModel(**self.config['electronics'])
         self.electronics.initialize()
 
         # This is a temporary fix in order to control the servo from a different Arduino
@@ -294,7 +294,7 @@ class NPTracking(Experiment):
         file_path = os.path.join(file_dir, file_name)
         max_memory = self.config['saving']['max_memory']
 
-        self.stream_saving_process = Process(target=worker_pusher,
+        self.stream_saving_process = Process(target=worker_listener,
                                              args=(file_path, json.dumps(self.config), 'free_run'),
                                              kwargs={'max_memory': max_memory})
         self.stream_saving_process.start()

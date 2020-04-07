@@ -96,19 +96,18 @@ class Camera(BaseCamera):
             self.gain = self.get_gain()
 
     def set_acquisition_mode(self, mode):
-        self.logger.info(f'Setting acquisition mode to {mode}')
+        if self.camera.IsGrabbing():
+            self.logger.warning(f'{self.friendly_name} Changing acquisition mode for a grabbing camera')
+
+        self.logger.info(f'{self.friendly_name} Setting acquisition mode to {mode}')
         if mode == self.MODE_CONTINUOUS:
             self.logger.debug(f'Setting buffer to {self.camera.MaxNumBuffer.Value}')
-            self.camera.OutputQueueSize = self.camera.MaxNumBuffer.Value
-            self.camera.AcquisitionMode.SetValue('Continuous')
             self.mode = mode
         elif mode == self.MODE_SINGLE_SHOT:
             self.logger.debug(f'Setting buffer to 1')
-            self.camera.OutputQueueSize = 1
-            self.camera.AcquisitionMode.SetValue('SingleFrame')
             self.mode = mode
-        self.logger.info('Starting Acquisition')
-        self.camera.AcquisitionStart.Execute()
+        # self.logger.info('Starting Acquisition')
+        # self.camera.AcquisitionStart.Execute()
 
     def auto_exposure(self):
         self.camera.ExposureAuto.SetValue('Off')
@@ -197,11 +196,11 @@ class Camera(BaseCamera):
     def trigger_camera(self):
         if self.camera.IsGrabbing():
             self.logger.warning('Triggering an already grabbing camera')
-        else:
-            if self.mode == self.MODE_CONTINUOUS:
-                self.camera.StartGrabbing(pylon.GrabStrategy_OneByOne)
-            elif self.mode == self.MODE_SINGLE_SHOT:
-                self.camera.StartGrabbing(1)
+        self.camera.StopGrabbing()
+        if self.mode == self.MODE_CONTINUOUS:
+            self.camera.StartGrabbing(pylon.GrabStrategy_OneByOne)
+        elif self.mode == self.MODE_SINGLE_SHOT:
+            self.camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
         self.camera.ExecuteSoftwareTrigger()
 
     # @property
@@ -236,15 +235,14 @@ class Camera(BaseCamera):
 
     def read_camera(self):
         with _basler_lock:
-            if not self.camera.IsGrabbing():
-                raise WrongCameraState('You need to trigger the camera before reading from it')
-
             if self.mode == self.MODE_SINGLE_SHOT:
                 grab = self.camera.RetrieveResult(int(self.exposure.m_as('ms')) + 100, pylon.TimeoutHandling_Return)
                 img = [grab.Array]
                 grab.Release()
                 self.camera.StopGrabbing()
             else:
+                if not self.camera.IsGrabbing():
+                    raise WrongCameraState('You need to trigger the camera before reading from it')
                 img = []
                 num_buffers = self.camera.NumReadyBuffers.Value
                 self.logger.debug(f'{self.camera.NumReadyBuffers.Value} frames available')
@@ -252,6 +250,11 @@ class Camera(BaseCamera):
                     img = [None] * num_buffers
                     for i in range(num_buffers):
                         grab = self.camera.RetrieveResult(int(self.exposure.m_as('ms')), pylon.TimeoutHandling_Return)
+
+                        skipped_frames = grab.GetNumberOfSkippedImages()
+                        if skipped_frames>0:
+                            self.logger.warning(f'There are {skipped_frames} skipped frames')
+
                         if grab and grab.GrabSucceeded():
                             img[i] = grab.GetArray()
                             grab.Release()
@@ -285,9 +288,6 @@ class Camera(BaseCamera):
                 for img in data:
                     self.i += 1
                     self.logger.debug('Number of frames: {}'.format(self.i))
-                    # This will broadcast the data just acquired with the current timestamp
-                    # The timestamp is very unreliable, especially if the camera has a frame grabber.
-                    # self.publisher.publish('free_run', [time.time(), img])
                     self.pusher.publish(img, f'{self.id}_free_run')
                 self.fps = round(self.i / (time.time() - t0))
                 time.sleep(exposure.m_as('s'))
@@ -325,7 +325,6 @@ class Camera(BaseCamera):
             self.logger.warning(f'There are {len(self._threads)} threads still alive in {self.friendly_name}')
             time.sleep(1)
             self.finalize()
-
 
     def __str__(self):
         if self.friendly_name:

@@ -28,14 +28,14 @@ String channel;
 int sensorPin = A0;    // select the input pin for the potentiometer
 int sensorValue;
 int i = 0;
-int Laser_LED = 24;
+int Laser_LED = 49;
 int Fiber_LED = 26;
 int Power_LED = 30;
 int Top_LED = 42;
 int Servo_PIN = 13;
 int Servo_ON = 1;
 int Servo_OFF = 15;
-int Measure_LED = 44;
+int Measure_LED = 50;
 byte rx_byte = 0;        // stores received byte
 
 int piezo_delay = 25; // delay before stopping the movement of the piezo in milliseconds

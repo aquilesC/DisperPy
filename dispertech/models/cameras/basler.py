@@ -196,12 +196,16 @@ class Camera(BaseCamera):
     def trigger_camera(self):
         if self.camera.IsGrabbing():
             self.logger.warning('Triggering an already grabbing camera')
+        self.logger.info('Stopping camera')
         self.camera.StopGrabbing()
         if self.mode == self.MODE_CONTINUOUS:
             self.camera.StartGrabbing(pylon.GrabStrategy_OneByOne)
+            self.logger.info('Setting grab strategy to one by one')
         elif self.mode == self.MODE_SINGLE_SHOT:
             self.camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
+            self.logger.info('Setting grab strategy to Latest Image Only')
         self.camera.ExecuteSoftwareTrigger()
+        self.logger.info('Executed Software Trigger')
 
     # @property
     # def temp_image(self):
@@ -280,6 +284,7 @@ class Camera(BaseCamera):
         exposure = self.get_exposure()
         try:
             while not self._stop_free_run.is_set():
+                time.sleep(exposure.m_as('s'))
                 data = self.read_camera()
                 if not data:
                     continue
@@ -290,7 +295,6 @@ class Camera(BaseCamera):
                     self.logger.debug('Number of frames: {}'.format(self.i))
                     self.pusher.publish(img, f'{self.id}_free_run')
                 self.fps = round(self.i / (time.time() - t0))
-                time.sleep(exposure.m_as('s'))
                 self.temp_image = img
         except Exception as e:
             self.free_run_running = False
@@ -300,6 +304,10 @@ class Camera(BaseCamera):
         self.stop_camera()
 
     def stop_free_run(self):
+        if self.free_run_running:
+            self.logger.info('Stopping a free run')
+        else:
+            self.logger.info('Free run not running but stopping it')
         self._stop_free_run.set()
         time.sleep(0.005)
 
@@ -317,14 +325,18 @@ class Camera(BaseCamera):
         self.camera.PixelFormat = format
 
     def finalize(self):
-        super().finalize()
+        self.logger.debug('Finalizing camera')
         self.stop_free_run()
+        while self.free_run_running:
+            time.sleep(.005)
         self.stop_camera()
         self.clean_up_threads()
         if len(self._threads) > 0:
             self.logger.warning(f'There are {len(self._threads)} threads still alive in {self.friendly_name}')
             time.sleep(1)
             self.finalize()
+        self.logger.info('Finalized Camera')
+        super().finalize()
 
     def __str__(self):
         if self.friendly_name:

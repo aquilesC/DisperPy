@@ -41,7 +41,6 @@ class Camera(BaseCamera):
         self.friendly_name = None
         self._stop_free_run = Event()
         self.free_run_running = False
-        self._temp_image = None
         self.pusher = Pusher()
         self.fps = 0
         self.i = 0  # Number of frames acquired
@@ -206,18 +205,6 @@ class Camera(BaseCamera):
             self.logger.info('Setting grab strategy to Latest Image Only')
         self.camera.ExecuteSoftwareTrigger()
         self.logger.info('Executed Software Trigger')
-
-    # @property
-    # def temp_image(self):
-    #     if self._temp_image is not None:
-    #         img = np.copy(self._temp_image)
-    #         self._temp_image = None
-    #         return img
-    #     return self._temp_image
-    #
-    # @temp_image.setter
-    # def temp_image(self, image):
-    #     self._temp_image = image
 
     def set_gain(self, gain: float) -> float:
         self.logger.info(f'Setting gain to {gain}')

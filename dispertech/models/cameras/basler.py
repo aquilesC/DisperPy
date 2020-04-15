@@ -45,7 +45,7 @@ class Camera(BaseCamera):
         self.fps = 0
         self.i = 0  # Number of frames acquired
         self.gain = 0
-        self.exposure = 0
+        self.exposure = Q_('.1s')
         self.camera = None
         self.initialize_lock = Lock()  # Lock used to prevent anything from happening before initializing the camera
 
@@ -231,12 +231,12 @@ class Camera(BaseCamera):
                 img = [grab.Array]
                 grab.Release()
                 self.camera.StopGrabbing()
+                return img
             else:
                 if not self.camera.IsGrabbing():
                     raise WrongCameraState('You need to trigger the camera before reading from it')
-                img = []
                 num_buffers = self.camera.NumReadyBuffers.Value
-                self.logger.debug(f'{self.camera.NumReadyBuffers.Value} frames available')
+                self.logger.debug(f'{num_buffers} frames available')
                 if num_buffers:
                     img = [None] * num_buffers
                     for i in range(num_buffers):
@@ -247,9 +247,10 @@ class Camera(BaseCamera):
                             self.logger.warning(f'There are {skipped_frames} skipped frames')
 
                         if grab and grab.GrabSucceeded():
-                            img[i] = grab.GetArray()
+                            img[i] = grab.GetArray().T
                             grab.Release()
-            return [i.T for i in img if i is not None]  # Transpose to have the correct size
+                    return img
+            return []
 
     @make_async_thread
     def start_free_run(self):
@@ -324,6 +325,9 @@ class Camera(BaseCamera):
             self.finalize()
         self.logger.info('Finalized Camera')
         super().finalize()
+
+    def resulting_frame_rate(self):
+        return self.camera.ResultingFrameRate.GetValue()
 
     def __str__(self):
         if self.friendly_name:

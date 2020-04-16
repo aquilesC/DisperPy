@@ -23,7 +23,7 @@ from experimentor.core.pusher import Pusher
 from experimentor.models.cameras.base_camera import BaseCamera
 from experimentor.models.cameras.exceptions import CameraNotFound, WrongCameraState
 from experimentor.models.decorators import make_async_thread
-from pypylon import pylon
+from pypylon import pylon, _genicam
 
 
 class Camera(BaseCamera):
@@ -208,30 +208,43 @@ class Camera(BaseCamera):
 
     def set_gain(self, gain: float) -> float:
         self.logger.info(f'Setting gain to {gain}')
-        self.camera.Gain.SetValue(gain)
+        try:
+            self.camera.Gain.SetValue(gain)
+        except _genicam.RuntimeException:
+            self.logger.error('Problem setting the gain')
         return self.get_gain()
 
     def get_gain(self) -> float:
-        self.gain = float(self.camera.Gain.Value)
-        return self.gain
+        try:
+            self.gain = float(self.camera.Gain.Value)
+            return self.gain
+        except _genicam.TimeoutException:
+            return self.gain
 
     def set_exposure(self, exposure: Q_) -> Q_:
         self.logger.info('Setting exposure to {:~}'.format(exposure))
-        self.camera.ExposureTime.SetValue(exposure.m_as('us'))
+        try:
+            self.camera.ExposureTime.SetValue(exposure.m_as('us'))
+        except _genicam.RuntimeException:
+            self.logger.error('Problem setting the exposure')
         return self.get_exposure()
 
     def get_exposure(self) -> Q_:
-        self.exposure = float(self.camera.ExposureTime.ToString()) * Q_('us')
-        return self.exposure
+        try:
+            self.exposure = float(self.camera.ExposureTime.ToString()) * Q_('us')
+            return self.exposure
+        except _genicam.TimeoutException:
+            return self.exposure
 
-    def read_camera(self):
+    def read_camera(self) -> list:
         with _basler_lock:
+            img = []
             if self.mode == self.MODE_SINGLE_SHOT:
                 grab = self.camera.RetrieveResult(int(self.exposure.m_as('ms')) + 100, pylon.TimeoutHandling_Return)
-                img = [grab.Array]
+                if grab and grab.GrabSucceeded():
+                    img = [grab.GetArray().T]
                 grab.Release()
                 self.camera.StopGrabbing()
-                return img
             else:
                 if not self.camera.IsGrabbing():
                     raise WrongCameraState('You need to trigger the camera before reading from it')
@@ -240,17 +253,17 @@ class Camera(BaseCamera):
                 if num_buffers:
                     img = [None] * num_buffers
                     for i in range(num_buffers):
-                        grab = self.camera.RetrieveResult(int(self.exposure.m_as('ms')), pylon.TimeoutHandling_Return)
-
+                        grab = self.camera.RetrieveResult(int(self.exposure.m_as('ms'))*2, pylon.TimeoutHandling_Return)
                         skipped_frames = grab.GetNumberOfSkippedImages()
                         if skipped_frames>0:
                             self.logger.warning(f'There are {skipped_frames} skipped frames')
 
                         if grab and grab.GrabSucceeded():
                             img[i] = grab.GetArray().T
-                            grab.Release()
-                    return img
-            return []
+                        grab.Release()
+            if len(img) >= 1:
+                self.temp_image = img[-1]
+            return img
 
     @make_async_thread
     def start_free_run(self):
@@ -283,7 +296,6 @@ class Camera(BaseCamera):
                     self.logger.debug('Number of frames: {}'.format(self.i))
                     self.pusher.publish(img, f'{self.id}_free_run')
                 self.fps = round(self.i / (time.time() - t0))
-                self.temp_image = img
         except Exception as e:
             self.free_run_running = False
             self.stop_camera()
@@ -298,6 +310,9 @@ class Camera(BaseCamera):
             self.logger.info('Free run not running but stopping it')
         self._stop_free_run.set()
         time.sleep(0.005)
+        t0 = time.time()
+        while self.free_run_running:
+            time.sleep(0.005)
 
     def stop_camera(self):
         self.logger.info('Stopping camera')

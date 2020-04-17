@@ -23,6 +23,7 @@ from experimentor.core.pusher import Pusher
 from experimentor.models.cameras.base_camera import BaseCamera
 from experimentor.models.cameras.exceptions import CameraNotFound, WrongCameraState
 from experimentor.models.decorators import make_async_thread
+from experimentor.models.properties import Properties
 from pypylon import pylon, _genicam
 
 
@@ -48,6 +49,12 @@ class Camera(BaseCamera):
         self.exposure = Q_('.1s')
         self.camera = None
         self.initialize_lock = Lock()  # Lock used to prevent anything from happening before initializing the camera
+
+        self.config = Properties.from_dict(self, data={
+            'exposure': [Q_('.1s'), 'get_exposure', 'set_exposure'],
+            'gain': [0, 'get_gain', 'set_gain'],
+            'offset_x': [0, 'camera.OffsetX.GetValue', None]
+        })
 
     def initialize(self):
         """ Initializes the communication with the camera. Get's the maximum and minimum width. It also forces
@@ -351,7 +358,6 @@ class Camera(BaseCamera):
 
 
 if __name__ == '__main__':
-    from time import sleep
     import matplotlib.pyplot as plt
 
     logger = get_logger()

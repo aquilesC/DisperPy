@@ -15,7 +15,8 @@ from dispertech.controller.devices.arduino.arduino import Arduino
 from experimentor.core.signal import Signal
 from experimentor.lib.log import get_logger
 from experimentor.models.decorators import make_async_thread
-from experimentor.models.models import ModelDevice
+from experimentor.models.devices.base_device import ModelDevice
+
 
 rm = pyvisa.ResourceManager('@py')
 
@@ -27,6 +28,7 @@ class ArduinoModel(ModelDevice):
         """ Use the port if you know where the Arduino is connected, or use the device number in the order shown by
         pyvisa.
         """
+        super().__init__()
         self._threads = []
         self._stop_temperature = Event()
         self.temp_electronics = 0

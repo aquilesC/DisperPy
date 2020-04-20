@@ -18,7 +18,7 @@ from experimentor.config import settings
 from experimentor.core.signal import Signal
 from experimentor.core.subscriber import Subscriber
 from experimentor.models.decorators import make_async_thread
-from experimentor.models.experiments.base_experiment import Experiment
+from experimentor.models.experiments import Experiment
 
 
 class NPTracking(Experiment):
@@ -107,6 +107,11 @@ class NPTracking(Experiment):
                 self.logger.error('The model {} for the camera was not found'.format(camera))
                 raise
         return cam_module
+
+    def initialize(self):
+        self.load_cameras()
+        self.load_electronics()
+        self.electronics.monitor_temperature()
 
     def initialize_camera(self, cam_module, config: dict):
         """ Initializes the camera to be used to acquire data. The information on the camera should be provided in the
@@ -442,3 +447,6 @@ class NPTracking(Experiment):
         except Exception as e:
             self.logger.error(e)
         super().finalize()
+
+    def __str__(self):
+        return "Nanoparticle Tracking Experiment"

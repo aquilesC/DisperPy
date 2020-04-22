@@ -11,6 +11,6 @@ if __name__ == "__main__":
 
     from experimentor.core.app import ExperimentApp
 
-    app = ExperimentApp(gui=True)
+    app = ExperimentApp(gui=False)
     while app.gui_thread.is_alive():
         sleep(1)

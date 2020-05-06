@@ -102,7 +102,7 @@ class Camera(BaseCamera):
             self.gain = self.get_gain()
 
     def set_acquisition_mode(self, mode):
-        if self._camera.IsGrabbing():
+        if self.camera.IsGrabbing():
             self.logger.warning(f'{self.friendly_name} Changing acquisition mode for a grabbing camera')
 
         self.logger.info(f'{self.friendly_name} Setting acquisition mode to {mode}')

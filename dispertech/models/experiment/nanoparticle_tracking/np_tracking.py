@@ -88,7 +88,7 @@ class NPTracking(Experiment):
         Returns
         -------
         camera : CameraModule
-            The module where the ``Camera`` model is found. This is done in this way to avoid name clashes.
+            The module where the ``BaslerCamera`` model is found. This is done in this way to avoid name clashes.
 
         .. todo::  We are forcing the importing from either experimentor or dispertech. It should be more flexible to
             allow fine tuning the importing path.
@@ -119,8 +119,8 @@ class NPTracking(Experiment):
 
             Returns
             -------
-            Camera :
-                An instance of a Camera Model, found within the ``cam_module``. It is also initialized using the
+            BaslerCamera :
+                An instance of a BaslerCamera Model, found within the ``cam_module``. It is also initialized using the
                 internal method ``initialize``.
         """
 
@@ -129,7 +129,7 @@ class NPTracking(Experiment):
         if 'extra_args' in config:
             self.logger.info('Initializing camera with extra arguments')
             self.logger.debug(
-                'cam_module.Camera({}, {})'.format(cam_init_arguments, config['extra_args']))
+                'cam_module.BaslerCamera({}, {})'.format(cam_init_arguments, config['extra_args']))
             camera = cam_module.Camera(cam_init_arguments, *config['extra_args'])
         else:
             self.logger.info('Initializing camera without extra arguments')
@@ -191,7 +191,7 @@ class NPTracking(Experiment):
         """ Saves the last acquired image. The file to which it is going to be saved is defined in the config.
         """
         if self.temp_image[cam]:
-            self.logger.info(f'Saving last acquired image of Camera {cam}')
+            self.logger.info(f'Saving last acquired image of BaslerCamera {cam}')
             # Data will be appended to existing file
             file_name = self.config['saving']['filename_photo'] + '.hdf5'
             file_dir = self.config['saving']['directory']

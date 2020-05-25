@@ -1,11 +1,17 @@
+"""
+    Core Dispertech Experiment. It takes care of all the steps needed to acquire data, but not of the analysis itself.
+    There is a separate set of classes to perform data analysis.
+
+"""
 import os
 from typing import List
 
 import numpy as np
 
-from dispertech.models.cameras.basler import Camera
+
 from dispertech.models.electronics.arduino import ArduinoModel
 from experimentor.lib import fitgaussian
+from experimentor.models.cameras.basler import BaslerCamera
 from experimentor.models.decorators import make_async_thread
 from experimentor.models.experiments.base_experiment import Experiment, FormatDict
 
@@ -13,10 +19,9 @@ from experimentor.models.experiments.base_experiment import Experiment, FormatDi
 class Dispertech(Experiment):
     def __init__(self, config_file=None):
         super().__init__(filename=config_file)
-        self.cameras = dict(camera_microscope=None, camera_fiber=None)
-        self.camera_microscope = Camera(self.config['camera_microscope']['init'])
-        self.camera_fiber = Camera(self.config['camera_fiber']['init'])
-        self.electronics = dict(servo=None, main_electronics=None)
+        self.camera_microscope = BaslerCamera(self.config['camera_microscope']['init'])
+        self.camera_fiber = BaslerCamera(self.config['camera_fiber']['init'])
+        self.electronics = ArduinoModel(self.config['arduino']['init'])
         self.initializing = None  # None means has not been initialized, True means is happening, False means it's done
 
     def initialize_cameras(self):
@@ -24,12 +29,13 @@ class Dispertech(Experiment):
         It also sets some sensible parameters for the purposes of the experiment at hand, for example it disables auto
         exposure and auto gain.
         """
-        for cam in (self.camera_fiber, self.camera_microscope):
-            cam.initialize()
-            cam.set_auto_exposure('Off')
-            cam.set_auto_gain('Off')
-            cam.clear_ROI()
-            cam.set_pixel_format('Mono12')
+        self.camera_microscope.initialize()
+        # self.camera_microscope.auto
+        #     cam.initialize()
+        #     cam.set_auto_exposure('Off')
+        #     cam.set_auto_gain('Off')
+        #     cam.clear_ROI()
+        #     cam.set_pixel_format('Mono12')
 
     def initialize_electronics(self):
         """Initializes the electronics, assuming there are two arduinos connected one for the servo and one for the

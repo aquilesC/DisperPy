@@ -1,0 +1,7 @@
+camera_microscope:
+  model: basler # Should be a python file in model/cameras
+  init: acA1920 # Initial arguments to pass when creating the camera
+
+camera_fiber:
+  model: basler # Should be a python file in model/cameras
+  init: daA1280 # Initial arguments to pass when creating the camera

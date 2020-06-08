@@ -12,7 +12,6 @@ from threading import RLock
 from time import sleep
 
 from dispertech.controller.devices.arduino.arduino import Arduino
-from experimentor.core.signal import Signal
 from experimentor.lib.log import get_logger
 from experimentor.models.decorators import make_async_thread
 from experimentor.models.devices.base_device import ModelDevice
@@ -22,8 +21,6 @@ rm = pyvisa.ResourceManager('@py')
 
 
 class ArduinoModel(ModelDevice):
-    init = Signal()
-
     def __init__(self, port=None, device=0):
         """ Use the port if you know where the Arduino is connected, or use the device number in the order shown by
         pyvisa.
@@ -59,6 +56,9 @@ class ArduinoModel(ModelDevice):
             self._laser_led = 0
             self._fiber_led = 0
             self._top_led = 0
+            self._side_led = 0
+            self._power_led = 0
+            self._measure_led = 0
 
     def laser_power(self, power: int):
         """ Changes the laser power. It also switches on or off the laser LED based on the power level set.
@@ -77,24 +77,14 @@ class ArduinoModel(ModelDevice):
             self.driver.query(f'OUT:{out_power}')
 
     @property
-    def laser_led(self):
-        return self._laser_led
+    def side_led(self):
+        return self._side_led
 
-    @laser_led.setter
-    def laser_led(self, status: int):
-        with self.query_lock:
-            self.driver.query(f'LED:2:{status}')
-            self._laser_led = status
-
-    @property
-    def fiber_led(self):
-        return self._fiber_led
-
-    @fiber_led.setter
-    def fiber_led(self, status):
+    @side_led.setter
+    def side_led(self, status):
         with self.query_lock:
             self.driver.query(f'LED:0:{status}')
-            self._fiber_led = status
+            self._side_led = status
 
     @property
     def top_led(self):
@@ -103,10 +93,50 @@ class ArduinoModel(ModelDevice):
     @top_led.setter
     def top_led(self, status):
         with self.query_lock:
-            self.driver.query(f'LED:4:{status}')
+            self.driver.query(f'LED:1:{status}')
             self._top_led = status
 
-    @make_async_thread
+    @property
+    def fiber_led(self):
+        return self._fiber_led
+
+    @fiber_led.setter
+    def fiber_led(self, status):
+        with self.query_lock:
+            self.driver.query(f'LED:2:{status}')
+            self._fiber_led = status
+
+    @property
+    def power_led(self):
+        return self._power_led
+
+    @power_led.setter
+    def power_led(self, status):
+        with self.query_lock:
+            self.driver.query(f'LED:3:{status}')
+            self._power_led = status
+
+    @property
+    def laser_led(self):
+        return self._laser_led
+
+    @laser_led.setter
+    def laser_led(self, status: int):
+        with self.query_lock:
+            self.driver.query(f'LED:4:{status}')
+            self._laser_led = status
+
+    @property
+    def measure_led(self):
+        return self._measure_led
+
+    @measure_led.setter
+    def measure_led(self, status):
+        with self.query_lock:
+            self.driver.query(f'LED:5:{status}')
+            self._measure_led = status
+
+    # @make_async_thread
     def move_mirror(self, speed: int, direction: int, axis: int):
         """ Moves the mirror connected to the board
 

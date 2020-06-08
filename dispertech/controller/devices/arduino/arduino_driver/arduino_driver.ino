@@ -28,14 +28,18 @@ String channel;
 int sensorPin = A0;    // select the input pin for the potentiometer
 int sensorValue;
 int i = 0;
-int Laser_LED = 49;
-int Fiber_LED = 26;
-int Power_LED = 30;
-int Top_LED = 42;
-int Servo_PIN = 13;
+
+int Power_LED = 22;
+int Laser_LED = 24;
+int Measure_LED = 26;
+
+int Side_LED = 28;
+int Top_LED = 30;
+int Fiber_LED = 32;
+
+int Servo_PIN = 2;
 int Servo_ON = 1;
 int Servo_OFF = 15;
-int Measure_LED = 50;
 byte rx_byte = 0;        // stores received byte
 
 int piezo_delay = 25; // delay before stopping the movement of the piezo in milliseconds
@@ -98,19 +102,22 @@ void loop() {
 
       switch (val) {
         case 0:
-          digitalWrite(Fiber_LED, mode);
+          digitalWrite(Side_LED, mode);
           break;
         case 1:
-          digitalWrite(Measure_LED, mode);
+          digitalWrite(Top_LED, mode);
           break;
         case 2:
-          digitalWrite(Laser_LED, mode);
+          digitalWrite(Fiber_LED, mode);
           break;
         case 3:
           digitalWrite(Power_LED, mode);
           break;
         case 4:
-          digitalWrite(Top_LED, mode);
+          digitalWrite(Laser_LED, mode);
+          break;
+        case 5:
+          digitalWrite(Measure_LED, mode);
           break;
       }
       Serial.println("LED changed");

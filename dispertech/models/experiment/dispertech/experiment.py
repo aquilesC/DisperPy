@@ -11,7 +11,7 @@ import numpy as np
 
 from dispertech.models.electronics.arduino import ArduinoModel
 from experimentor.lib import fitgaussian
-from experimentor.models.cameras.basler import BaslerCamera
+from experimentor.models.devices.cameras.basler.basler import BaslerCamera
 from experimentor.models.decorators import make_async_thread
 from experimentor.models.experiments.base_experiment import Experiment, FormatDict
 
@@ -21,7 +21,7 @@ class Dispertech(Experiment):
         super().__init__(filename=config_file)
         self.camera_microscope = BaslerCamera(self.config['camera_microscope']['init'])
         self.camera_fiber = BaslerCamera(self.config['camera_fiber']['init'])
-        self.electronics = ArduinoModel(self.config['arduino']['init'])
+        self.electronics = ArduinoModel(self.config['electronics']['init'])
         self.initializing = None  # None means has not been initialized, True means is happening, False means it's done
 
     def initialize_cameras(self):
@@ -30,38 +30,33 @@ class Dispertech(Experiment):
         exposure and auto gain.
         """
         self.camera_microscope.initialize()
-        # self.camera_microscope.auto
-        #     cam.initialize()
-        #     cam.set_auto_exposure('Off')
-        #     cam.set_auto_gain('Off')
-        #     cam.clear_ROI()
-        #     cam.set_pixel_format('Mono12')
+        self.camera_fiber.initialize()
+        self.camera_microscope.config.update(self.config['camera_microscope']['config'])
+        self.camera_microscope.config.apply_all()
+        self.camera_fiber.config.update(self.config['camera_fiber']['config'])
+        self.camera_fiber.config.apply_all()
 
     def initialize_electronics(self):
         """Initializes the electronics, assuming there are two arduinos connected one for the servo and one for the
         rest."""
-        self.electronics['servo'] = ArduinoModel(**self.config['servo'])
-        self.electronics['main_electronics'] = ArduinoModel(**self.config['electronics'])
-
-        for electronics in self.electronics.values():
-            electronics.initialize()
+        self.electronics.initialize()
 
     @make_async_thread
     def initialize(self):
         self.initializing = True
         self.initialize_electronics()
         self.initialize_cameras()
-
         self.initializing = False
 
     @make_async_thread
     def start_fiber_focus(self):
         """Starts a free run of the camera that looks at the fiber end in order to focus the core. This requires to
         switch on the LED and off the Laser. """
-        self.cameras['camera_microscope'].stop_camera()
-        self.electronics['main_electronics'].fiber_led = 1
-        self.electronics['main_electronics'].top_led = 0
-        self.electronics['main_electronics'].laser_power = 0
+
+        self.camera_microscope.stop_camera()
+        self.electronics.fiber_led = 1
+        self.electronics.top_led = 0
+        self.electronics.laser_power = 0
         self.electronics['servo'].move_servo(0)
         self.config['camera_fiber'].update(self.config['laser_focusing'])
         self.cameras['camera_fiber'].stop_camera()

@@ -13,6 +13,7 @@ from time import sleep
 
 from dispertech.controller.devices.arduino.arduino import Arduino
 from experimentor.lib.log import get_logger
+from experimentor.models import Feature
 from experimentor.models.decorators import make_async_thread
 from experimentor.models.devices.base_device import ModelDevice
 
@@ -37,13 +38,26 @@ class ArduinoModel(ModelDevice):
 
         self.logger = get_logger()
 
+        self._laser_power = 0
+        self._laser_led = 0
+        self._fiber_led = 0
+        self._top_led = 0
+        self._side_led = 0
+        self._power_led = 0
+        self._measure_led = 0
+        self._servo_position = 0
+
     @make_async_thread
     def initialize(self):
+        """ This is a highly opinionated initialize method, in which the power of the laser is set to a minimum, the
+        servo shutter is closed, and LEDs are switched off.
+        """
         with self.query_lock:
             if not self.port:
                 port = Arduino.list_devices()[self.device]
             self.driver = rm.open_resource(port, baud_rate=19200)
             sleep(2)
+            # This is very silly, but clears the buffer so that next messages are not broken
             try:
                 self.driver.query("IDN")
             except VisaIOError:
@@ -52,22 +66,24 @@ class ArduinoModel(ModelDevice):
                 except VisaIOError:
                     pass
 
-            self.laser_power(0)
-            self._laser_led = 0
-            self._fiber_led = 0
-            self._top_led = 0
-            self._side_led = 0
-            self._power_led = 0
-            self._measure_led = 0
+        self.laser_power = 0
+        self.fiber_led = 0
+        self.top_led = 0
+        self.side_led = 0
+        self.servo = 0
 
-    def laser_power(self, power: int):
+    @Feature()
+    def laser_power(self):
         """ Changes the laser power. It also switches on or off the laser LED based on the power level set.
 
         Parameters
         ----------
         power int: Percentage of power (0-100)
-
         """
+        return self._laser_power
+
+    @laser_power.setter
+    def laser_power(self, power: int):
         with self.query_lock:
             out_power = round(power/100*4095)
             if out_power < 100:
@@ -75,8 +91,9 @@ class ArduinoModel(ModelDevice):
             else:
                 self.laser_led = 1
             self.driver.query(f'OUT:{out_power}')
+            self._laser_power = int(power)
 
-    @property
+    @Feature()
     def side_led(self):
         return self._side_led
 
@@ -86,7 +103,7 @@ class ArduinoModel(ModelDevice):
             self.driver.query(f'LED:0:{status}')
             self._side_led = status
 
-    @property
+    @Feature()
     def top_led(self):
         return self._top_led
 
@@ -96,7 +113,7 @@ class ArduinoModel(ModelDevice):
             self.driver.query(f'LED:1:{status}')
             self._top_led = status
 
-    @property
+    @Feature()
     def fiber_led(self):
         return self._fiber_led
 
@@ -106,7 +123,7 @@ class ArduinoModel(ModelDevice):
             self.driver.query(f'LED:2:{status}')
             self._fiber_led = status
 
-    @property
+    @Feature()
     def power_led(self):
         return self._power_led
 
@@ -116,7 +133,7 @@ class ArduinoModel(ModelDevice):
             self.driver.query(f'LED:3:{status}')
             self._power_led = status
 
-    @property
+    @Feature()
     def laser_led(self):
         return self._laser_led
 
@@ -126,7 +143,7 @@ class ArduinoModel(ModelDevice):
             self.driver.query(f'LED:4:{status}')
             self._laser_led = status
 
-    @property
+    @Feature()
     def measure_led(self):
         return self._measure_led
 
@@ -162,6 +179,15 @@ class ArduinoModel(ModelDevice):
                 self.temp_sample = float(self.driver.query("TEM:1"))
             sleep(5)
 
+    @Feature()
+    def servo(self):
+        return self._servo_position
+
+    @servo.setter
+    def servo(self, position):
+        with self.query_lock:
+            self.driver.query(f'serv:{position}')
+
     def move_servo(self, position: int):
         """Moves the servo to position either 0 (off) or 1 (on).
         The angle the servo moves is coded directly on the electronics code.
@@ -177,7 +203,7 @@ class ArduinoModel(ModelDevice):
         self._stop_temperature.set()
         self.fiber_led = 0
         self.top_led = 0
-        self.laser_power(0)
+        self.laser_power = 0
         self.driver.close()
         self.clean_up_threads()
         if len(self._threads):
@@ -187,11 +213,11 @@ class ArduinoModel(ModelDevice):
 if __name__ == "__main__":
     dev = Arduino.list_devices()[0]
     ard = ArduinoModel(dev)
-    ard.laser_power(50)
+    ard.laser_power = 50
     ard.move_mirror(60, 1, 1)
     sleep(2)
     ard.move_mirror(60,0,1)
-    ard.laser_power(100)
+    ard.laser_power = 100
     sleep(2)
-    ard.laser_power(1)
+    ard.laser_power = 1
 

@@ -9,18 +9,10 @@ user:
 electronics:
   device: 0
 
-servo: # This is a temp fix to control the servo with a different Arduino
-  device: 1
-
 saving:
-  auto_save: False
-  auto_save_waterfall: True
-  directory: /home/aquiles
-  filename_video: Video # Can be the same filename for video and photo
-  filename_photo: Snap
-  filename_tracks: Tracks
-  filename_waterfall: Waterfall
-  filename_trajectory: Trajectory
+  directory: D:\\Data\\
+  filename_video: 'video_{cartridge}_{i:04}.npy'
+  filename_snap: 'snap_{cartridge}_{i:04}.npy'
   filename_log: Log
   max_memory: 200 # In megabytes
 
@@ -33,65 +25,32 @@ camera_fiber:
   init: daA1280 # Initial arguments to pass when creating the camera
   #extra_args: [extra, arguments] # Extra arguments that can be passed when constructing the model
   model_camera: Dart # To keep a registry of which camera was used in the experiment
-  exposure_time: 30ms # Initial exposure time (in ms)
-  fps: 30  # Frames per second, should either be defined by the camera or within the model based on timing
-  binning_x: 1 # Binning
-  binning_y: 1
-  roi_x1: 1
-  roi_x2: 1280
-  roi_y1: 1
-  roi_y2: 960
-  background: '' # Full path to background file, or empty for none.
-  background_method: [Method1, Method2]
+  config:
+    auto_exposure: Off
+    auto_gain: Off
+    exposure_time: 30ms # Initial exposure time (in ms)
+    fps: 30  # Frames per second, should either be defined by the camera or within the model based on timing
+    binning_x: 1 # Binning
+    binning_y: 1
+    ROI: [[1, 1280], [1, 960]]
 
 camera_microscope:
   model: basler # Should be a python file in model/cameras
   init: acA1920 # Initial arguments to pass when creating the camera
   #extra_args: [extra, arguments] # Extra arguments that can be passed when constructing the model
   model_camera: ACE # To keep a registry of which camera was used in the experiment
-  exposure_time: 30ms # Initial exposure time (in ms)
-  fps: 30  # Frames per second, should either be defined by the camera or within the model based on timing
-  binning_x: 1 # Binning
-  binning_y: 1
-  roi_x1: 1
-  roi_x2: 1920
-  roi_y1: 1
-  roi_y2: 1200
-  background: '' # Full path to background file, or empty for none.
-  background_method: [Method1, Method2]
+  config:
+    auto_exposure: Off
+    auto_gain: Off
+    exposure_time: 30ms # Initial exposure time (in ms)
+    fps: 30  # Frames per second, should either be defined by the camera or within the model based on timing
+    binning_x: 1 # Binning
+    binning_y: 1
+    ROI: [[1, 1920], [1, 1200]]
 
 mirror:
   model: mechonics # Should be a Python file in model/motors
   init: 0  # Initial arguments
-
-
-waterfall: # Parameters for calculating the waterfall plot
-  length: 20  # The total length of the waterfall (lines)
-  vertical_bin: 10  # Total number of lines of the CCD to integrate
-
-movie:
-  buffer_length: 1000 # Frames
-
-tracking:
-  locate:
-    diameter: 5  # Diameter of the particles (in pixels) to track, has to be an odd number
-    invert: False
-    minmass: 100
-  link:
-    memory: 3
-    search_range: 5
-  filter:  # Filter spurious trajectories
-    min_length: 25
-  process:
-    compute_drift: False
-    um_pixel: 0.15  # Microns per pixel (calibration of the microscope)
-    min_traj_length: 2
-    min_mass: 0.05
-    max_size: 50.0
-    max_ecc: 1
-    fps: 30
-  param_1: 0.
-  param_2: 0
 
 debug:
   logging_level: Nothing # One of Nothing, Debug, Info, Warning, Error
@@ -102,20 +61,3 @@ sample:
   sample: a123
   data_folder: path/to/folder
   cartridge: 19NNMM
-
-laser_focusing:
-  exposure_time: 50ms
-  gain: 18
-
-
-microscope_focusing:
-  high:
-    exposure_time: 100ms
-    gain: 24
-  low:
-    exposure_time: 1ms
-    gain: 0
-
-core_options:
-  data_folder: /path/to/data/folder
-  fiber_end_image_name: 'fiber_end_{cartridge}_{i:04}.npy'

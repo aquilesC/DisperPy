@@ -13,8 +13,11 @@
   <property name="windowTitle">
    <string>Dispertech - Every Particle Counts</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_3">
+   <layout class="QVBoxLayout" name="verticalLayout_5">
     <item>
      <widget class="QWidget" name="widget_3" native="true"/>
     </item>
@@ -26,7 +29,7 @@
      <x>0</x>
      <y>0</y>
      <width>1230</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -59,6 +62,9 @@
    <property name="cursor">
     <cursorShape>ArrowCursor</cursorShape>
    </property>
+   <property name="features">
+    <set>QDockWidget::DockWidgetMovable</set>
+   </property>
    <property name="windowTitle">
     <string>Sample</string>
    </property>
@@ -73,15 +79,15 @@
         <string>Cartridge number</string>
        </property>
        <property name="text">
-        <string>Cartrdige</string>
+        <string>ID</string>
        </property>
        <property name="buddy">
-        <cstring>line_cartridge</cstring>
+        <cstring>line_id</cstring>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QLineEdit" name="line_cartridge">
+      <widget class="QLineEdit" name="line_id">
        <property name="toolTip">
         <string>Cartrdige number</string>
        </property>
@@ -90,15 +96,15 @@
      <item row="1" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Sample</string>
+        <string>Description</string>
        </property>
        <property name="buddy">
-        <cstring>lineEdit_2</cstring>
+        <cstring>line_description</cstring>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QLineEdit" name="lineEdit_2">
+      <widget class="QLineEdit" name="line_description">
        <property name="toolTip">
         <string>Your sample identification</string>
        </property>
@@ -112,7 +118,10 @@
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QWidget" name="widget" native="true">
+      <widget class="QWidget" name="folder_widget" native="true">
+       <property name="styleSheet">
+        <string notr="true">padding: 0;</string>
+       </property>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <property name="spacing">
          <number>0</number>
@@ -130,9 +139,9 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QLineEdit" name="lineEdit_3">
+         <widget class="QLineEdit" name="line_folder">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
@@ -143,7 +152,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton">
+         <widget class="QPushButton" name="button_choose_folder">
           <property name="maximumSize">
            <size>
             <width>16</width>
@@ -169,7 +178,7 @@
       </widget>
      </item>
      <item row="3" column="1">
-      <widget class="QPushButton" name="pushButton_2">
+      <widget class="QPushButton" name="button_add_note">
        <property name="toolTip">
         <string>Add notes to the measurement</string>
        </property>
@@ -178,10 +187,32 @@
        </property>
       </widget>
      </item>
+     <item row="4" column="1">
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
     </layout>
    </widget>
   </widget>
   <widget class="QDockWidget" name="dockWidget_4">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="features">
+    <set>QDockWidget::DockWidgetMovable</set>
+   </property>
    <property name="windowTitle">
     <string>Measurement</string>
    </property>
@@ -189,27 +220,33 @@
     <number>1</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_4">
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
       <widget class="QToolBox" name="toolBox">
+       <property name="styleSheet">
+        <string notr="true"/>
+       </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>3</number>
        </property>
        <widget class="QWidget" name="page">
         <property name="geometry">
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>200</width>
-          <height>494</height>
+          <width>267</width>
+          <height>401</height>
          </rect>
         </property>
         <attribute name="label">
-         <string>Fiber Focus</string>
+         <string>Microscope Focus</string>
         </attribute>
         <layout class="QFormLayout" name="formLayout_2">
          <item row="0" column="1">
-          <widget class="QPushButton" name="pushButton_3">
+          <widget class="QPushButton" name="button_start_microscope_focus">
            <property name="toolTip">
             <string>Start the camera to monitor the fiber end</string>
            </property>
@@ -218,10 +255,30 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
-          <widget class="QPushButton" name="pushButton_4">
+         <item row="2" column="1">
+          <widget class="QPushButton" name="button_done_microscope_focus">
            <property name="text">
             <string>Done</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <spacer name="verticalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="1" column="1">
+          <widget class="QPushButton" name="button_crop_microscope">
+           <property name="text">
+            <string>Crop</string>
            </property>
           </widget>
          </item>
@@ -232,32 +289,250 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>200</width>
-          <height>494</height>
+          <width>267</width>
+          <height>401</height>
          </rect>
         </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
         <attribute name="label">
-         <string>Microscope Focus</string>
+         <string>Fiber Focus</string>
         </attribute>
         <layout class="QFormLayout" name="formLayout_3">
          <item row="1" column="1">
-          <widget class="QPushButton" name="pushButton_6">
+          <widget class="QPushButton" name="button_fiber_led">
            <property name="text">
-            <string>Start</string>
+            <string>LED</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QPushButton" name="button_camera_fiber_high">
+           <property name="text">
+            <string>High Sensitivity</string>
            </property>
           </widget>
          </item>
          <item row="3" column="1">
-          <widget class="QPushButton" name="pushButton_5">
+          <widget class="QPushButton" name="fiber_camera_low">
+           <property name="text">
+            <string>Low Sensitivity</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QWidget" name="piezo_widget" native="true">
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <widget class="QGroupBox" name="groupBox_3">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>150</height>
+               </size>
+              </property>
+              <property name="title">
+               <string>Motor</string>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_5">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QWidget" name="widget_7" native="true">
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_3">
+                  <property name="spacing">
+                   <number>6</number>
+                  </property>
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QPushButton" name="button_fine_movement">
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Fine</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="button_coarse_movement">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>16777215</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Coarse</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QWidget" name="arrows_widget" native="true">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>100</width>
+                   <height>100</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>100</width>
+                   <height>100</height>
+                  </size>
+                 </property>
+                 <widget class="QPushButton" name="button_up">
+                  <property name="geometry">
+                   <rect>
+                    <x>30</x>
+                    <y>0</y>
+                    <width>31</width>
+                    <height>28</height>
+                   </rect>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="resources.qrc">
+                    <normaloff>:/icons/Icons/arrow_top.png</normaloff>:/icons/Icons/arrow_top.png</iconset>
+                  </property>
+                 </widget>
+                 <widget class="QPushButton" name="button_down">
+                  <property name="geometry">
+                   <rect>
+                    <x>30</x>
+                    <y>60</y>
+                    <width>31</width>
+                    <height>28</height>
+                   </rect>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="resources.qrc">
+                    <normaloff>:/icons/Icons/arrow_bottom.png</normaloff>:/icons/Icons/arrow_bottom.png</iconset>
+                  </property>
+                 </widget>
+                 <widget class="QPushButton" name="button_right">
+                  <property name="geometry">
+                   <rect>
+                    <x>60</x>
+                    <y>30</y>
+                    <width>31</width>
+                    <height>28</height>
+                   </rect>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="resources.qrc">
+                    <normaloff>:/icons/Icons/arrow_right.png</normaloff>:/icons/Icons/arrow_right.png</iconset>
+                  </property>
+                 </widget>
+                 <widget class="QPushButton" name="button_left">
+                  <property name="geometry">
+                   <rect>
+                    <x>0</x>
+                    <y>30</y>
+                    <width>31</width>
+                    <height>28</height>
+                   </rect>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="resources.qrc">
+                    <normaloff>:/icons/Icons/arrow_left.png</normaloff>:/icons/Icons/arrow_left.png</iconset>
+                  </property>
+                 </widget>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QPushButton" name="button_done_fiber_focus">
            <property name="text">
             <string>Done</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="1">
-          <widget class="QPushButton" name="pushButton_8">
+         <item row="0" column="1">
+          <widget class="QPushButton" name="button_start_fiber_focus">
            <property name="text">
-            <string>Crop</string>
+            <string>Start</string>
            </property>
           </widget>
          </item>
@@ -268,8 +543,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>202</width>
-          <height>494</height>
+          <width>267</width>
+          <height>401</height>
          </rect>
         </property>
         <attribute name="label">
@@ -284,51 +559,38 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QLineEdit" name="lineEdit_4"/>
+          <widget class="QLineEdit" name="line_microscope_exposure">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
          </item>
-         <item row="2" column="0">
+         <item row="1" column="0">
           <widget class="QLabel" name="label_6">
            <property name="text">
             <string>Gain</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="1">
-          <widget class="QLineEdit" name="lineEdit_5">
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="line_microscope_gain">
            <property name="styleSheet">
             <string notr="true"/>
            </property>
           </widget>
          </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_7">
-           <property name="text">
-            <string>Laser</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="QLCDNumber" name="lcdNumber"/>
-         </item>
-         <item row="5" column="1">
-          <widget class="QPushButton" name="pushButton_7">
+         <item row="2" column="1">
+          <widget class="QPushButton" name="line_start_measurement">
            <property name="text">
             <string>Start</string>
            </property>
           </widget>
          </item>
          <item row="3" column="1">
-          <widget class="QSlider" name="horizontalSlider">
-           <property name="maximum">
-            <number>100</number>
-           </property>
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="1">
-          <widget class="QPushButton" name="pushButton_9">
+          <widget class="QPushButton" name="line_stop_measurement">
            <property name="text">
             <string>Stop</string>
            </property>
@@ -341,8 +603,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>249</width>
-          <height>494</height>
+          <width>267</width>
+          <height>401</height>
          </rect>
         </property>
         <attribute name="label">
@@ -355,6 +617,13 @@
             <string>Locations</string>
            </property>
            <layout class="QFormLayout" name="formLayout_7">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>File</string>
+              </property>
+             </widget>
+            </item>
             <item row="0" column="1">
              <widget class="QWidget" name="widget_2" native="true">
               <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -374,9 +643,9 @@
                 <number>0</number>
                </property>
                <item>
-                <widget class="QLineEdit" name="lineEdit_6">
+                <widget class="QLineEdit" name="line_file_analysis">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
@@ -384,7 +653,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_10">
+                <widget class="QPushButton" name="button_file_analysis">
                  <property name="maximumSize">
                   <size>
                    <width>16</width>
@@ -402,215 +671,32 @@
               </layout>
              </widget>
             </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_9">
-              <property name="text">
-               <string>Threshold</string>
-              </property>
-             </widget>
-            </item>
             <item row="1" column="1">
-             <widget class="QSlider" name="horizontalSlider_2">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+             <widget class="QPushButton" name="button_load_analysis_file">
+              <property name="text">
+               <string>Load</string>
               </property>
              </widget>
             </item>
             <item row="2" column="1">
-             <widget class="QLCDNumber" name="lcdNumber_2"/>
-            </item>
-            <item row="4" column="1">
-             <widget class="QComboBox" name="comboBox">
-              <item>
-               <property name="text">
-                <string>None</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>One Frame</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Rolling</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Median</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-            <item row="5" column="1">
-             <widget class="QPushButton" name="pushButton_11">
-              <property name="text">
-               <string>Start</string>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="1">
-             <widget class="QPushButton" name="pushButton_12">
+             <widget class="QPushButton" name="button_save_analysis_file">
               <property name="text">
                <string>Save</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_8">
-              <property name="text">
-               <string>File</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0">
-             <widget class="QLabel" name="label_11">
-              <property name="text">
-               <string>Background</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <widget class="QGroupBox" name="groupBox_2">
-           <property name="title">
-            <string>Size Analysis</string>
-           </property>
-           <layout class="QFormLayout" name="formLayout_5">
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_10">
-              <property name="text">
-               <string>Viscosity</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QLineEdit" name="lineEdit_7">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_14">
-              <property name="text">
-               <string>File</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QWidget" name="widget_4" native="true">
-              <layout class="QHBoxLayout" name="horizontalLayout_4">
-               <property name="spacing">
-                <number>0</number>
-               </property>
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>0</number>
-               </property>
-               <item>
-                <widget class="QLineEdit" name="lineEdit_10">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pushButton_14">
-                 <property name="maximumSize">
-                  <size>
-                   <width>16</width>
-                   <height>16</height>
-                  </size>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">border-image: url(:/icons/Icons/folder-open.png) 0 0 0 0 strech strech;</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QPushButton" name="pushButton_15">
-              <property name="text">
-               <string>Start</string>
               </property>
              </widget>
             </item>
             <item row="3" column="1">
-             <widget class="QPushButton" name="pushButton_16">
-              <property name="text">
-               <string>Save</string>
+             <spacer name="verticalSpacer_4">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
               </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <widget class="QWidget" name="widget_5" native="true">
-           <layout class="QFormLayout" name="formLayout_6">
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_12">
-              <property name="text">
-               <string>Cartrdige</string>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
               </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QLineEdit" name="lineEdit_8">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="toolTip">
-               <string>Your sample identification</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_13">
-              <property name="text">
-               <string>Sample</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QLineEdit" name="lineEdit_9">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="toolTip">
-               <string>Your sample identification</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QPushButton" name="pushButton_13">
-              <property name="text">
-               <string>View Notes</string>
-              </property>
-             </widget>
+             </spacer>
             </item>
            </layout>
           </widget>

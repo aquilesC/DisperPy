@@ -66,11 +66,11 @@ class ArduinoModel(ModelDevice):
                 except VisaIOError:
                     pass
 
-        self.laser_power = 0
-        self.fiber_led = 0
-        self.top_led = 0
-        self.side_led = 0
-        self.servo = 0
+        # self.laser_power = 0
+        # self.fiber_led = 0
+        # self.top_led = 0
+        # self.side_led = 0
+        # self.servo = 0
 
     @Feature()
     def laser_power(self):

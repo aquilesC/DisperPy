@@ -199,15 +199,16 @@ class ArduinoModel(ModelDevice):
             self.driver.query(f"serv:{position}")
 
     def finalize(self):
-        super().finalize()
+        self.logger.info('Finalizing Arduino')
         self._stop_temperature.set()
         self.fiber_led = 0
         self.top_led = 0
         self.laser_power = 0
-        self.driver.close()
         self.clean_up_threads()
         if len(self._threads):
             self.logger.warning(f'There are {len(self._threads)} still alive in Arduino')
+        self.driver.close()
+        super().finalize()
 
 
 if __name__ == "__main__":

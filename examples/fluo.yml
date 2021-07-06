@@ -1,0 +1,87 @@
+%YAML 1.2
+---
+# Default parameters for the Dispertech Fluorescence device
+# These are the initial parameters. Whatever is changed while the program is running will be stored in a configuration
+# folder
+
+metadata:
+  user:
+    name: Aquiles
+  sample:
+    sample_id: 0
+    description: ""
+  data:
+    folder: "C:\\Users\\aquic\\Data"
+
+microscope_focus:
+  camera:
+    exposure_time: 100us
+    gain: 0
+
+fiber_focus:
+  laser_power: 10  # In percentage
+  high_sensitivity:
+    exposure_time: 100ms
+    gain: 0
+  low_sensitivity:
+    exposure_time: 10us
+    gain: 0
+  mirror_piezo:
+    fine_step: 1
+    coarse_step: 5
+  lens_piezo:
+    fine_step: 5
+    coarse_step: 10
+
+measurement:
+  camera:
+    exposure: 5ms
+    gain: 18
+  buffer_size: 1000MB
+  filename: 'movie_{sample_id}_{i:04}.npy'
+
+electronics:
+  piezo:
+    device: 0
+    vertical_axis: 1
+    horizontal_axis: 2
+    longitudinal_axis: 3
+    mirror_speed: 1
+    lens_speed: 5
+
+  laser:
+    device: 1
+    scattering_laser: 0
+    fluo_laser: 0
+    fiber_led: 0
+    top_led: 0
+
+camera_fiber:
+  model: basler # Should be a python file in model/cameras
+  init: daA1280 # Initial arguments to pass when creating the camera
+  model_camera: Dart # To keep a registry of which camera was used in the experiment
+  config:
+    exposure: 30ms # Initial exposure time (in ms)
+    gain: 0.
+    auto_exposure: Off
+    auto_gain: Off
+    pixel_format: Mono8
+    binning: [1, 1] # Binning
+    ROI: [[1, 1280], [1, 960]]
+
+camera_microscope:
+  model: basler # Should be a python file in model/cameras
+  init: acA1920 # Initial arguments to pass when creating the camera
+  model_camera: ACE # To keep a registry of which camera was used in the experiment
+  config:
+    exposure: 30ms # Initial exposure time (in ms)
+    gain: 0.
+    ROI: [[1, 1920], [1, 1200]]
+    pixel_format: Mono12
+    auto_exposure: Off
+    auto_gain: Off
+
+debug:
+  logging_level: Nothing # One of Nothing, Debug, Info, Warning, Error
+  queue_memory: False
+  to_screen: True

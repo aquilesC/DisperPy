@@ -5,8 +5,8 @@
     Adding log capacities to Dispertech
 
 
-    :copyright:  Aquiles Carattino <aquiles@uetke.com>
-    :license: GPLv3, see LICENSE for more details
+    :copyright: Aquiles Carattino, Dispertech B.V.
+    :license: MIT, see LICENSE.md for more details
 """
 import logging, multiprocessing
 

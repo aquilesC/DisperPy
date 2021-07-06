@@ -102,19 +102,19 @@ class FocusingWindow(QMainWindow):
 
     def move_right(self):
         speed = int(self.speed_slider.value())
-        self.experiment.electronics.move_mirror(speed, 1, 2)
+        self.experiment.electronics.move_piezo(speed, 1, 2)
 
     def move_left(self):
         speed = int(self.speed_slider.value())
-        self.experiment.electronics.move_mirror(speed, 0, 2)
+        self.experiment.electronics.move_piezo(speed, 0, 2)
 
     def move_up(self):
         speed = int(self.speed_slider.value())
-        self.experiment.electronics.move_mirror(speed, 1, 1)
+        self.experiment.electronics.move_piezo(speed, 1, 1)
 
     def move_down(self):
         speed = int(self.speed_slider.value())
-        self.experiment.electronics.move_mirror(speed, 0, 1)
+        self.experiment.electronics.move_piezo(speed, 0, 1)
 
     def change_power(self):
         power = int(self.power_slider.value())

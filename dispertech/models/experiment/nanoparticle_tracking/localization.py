@@ -16,7 +16,7 @@ in order to collect new frames, or save localizations to disk. It uses the
 with the Publisher.
 
 :copyright:  Aquiles Carattino <aquiles@uetke.com>
-:license: GPLv3, see LICENSE for more details
+:license: GPLv3, see LICENSE.md for more details
 """
 import trackpy as tp
 

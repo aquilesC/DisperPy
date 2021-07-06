@@ -64,7 +64,7 @@ class Dispertech(Experiment):
         :param axis: 1 or 2, axis means top/down or left/right each is addressed by a different controller
         :param int speed: Speed, from 0 to 2^6. A speed of 0 stops the ongoing movement, a speed of 1 is a single step.
         """
-        self.electronics.move_mirror(speed, direction, axis)
+        self.electronics.move_piezo(speed, direction, axis)
 
     @make_async_thread
     def initialize(self):

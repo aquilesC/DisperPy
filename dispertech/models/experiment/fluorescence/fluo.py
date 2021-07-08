@@ -98,10 +98,15 @@ class Fluorescence(Experiment):
     def toggle_fiber_led(self):
         self.electronics.fiber_led = 0 if self.electronics.fiber_led else 1
 
-    def get_latest_image(self, camera: str):
+    def get_latest_image(self, camera):
         """ Reads the camera.
 
         .. TODO:: This must be changed since it was inherited from the time when both cameras were stored in a dict
+
+        Parameters
+        ----------
+        camera : str
+            The name of the camera, either 'camera_microscope' or 'camera_fiber'
         """
 
         if camera == 'camera_microscope':
@@ -118,15 +123,17 @@ class Fluorescence(Experiment):
                 tmp_image = ttmp_image
             else:
                 self.background = None
-            # return (tmp_image/2**4).astype(np.uint8)
             return tmp_image
         else:
             return self.camera_fiber.temp_image
 
-    def stop_free_run(self, camera: str):
+    def stop_free_run(self, camera):
         """ Stops the free run of the camera.
 
-        :param camera: must be the same as specified in the config file, for example 'camera_microscope'
+        Parameters
+        ----------
+        camera : str
+            must be the same as specified in the config file, for example 'camera_microscope'
 
         .. todo:: This must change, since it was inherited from the time both cameras were stored in a dict
         """
@@ -136,8 +143,14 @@ class Fluorescence(Experiment):
         elif camera == 'camera_fiber':
             self.camera_fiber.stop_free_run()
 
-    def prepare_folder(self) -> str:
-        """Creates the folder with the proper date, using the base directory given in the config file"""
+    def prepare_folder(self):
+        """Creates the folder with the proper date, using the base directory given in the config file
+
+        Returns
+        -------
+        folder : str
+            The full path to the folder where data will be saved, adding the current date to the end
+        """
         base_folder = self.config['info']['folder']
         today_folder = f'{datetime.today():%Y-%m-%d}'
         folder = os.path.join(base_folder, today_folder)
@@ -145,12 +158,19 @@ class Fluorescence(Experiment):
             os.makedirs(folder)
         return folder
 
-    def get_filename(self, base_filename: str) -> str:
+    def get_filename(self, base_filename):
         """Checks if the given filename exists in the given folder and increments a counter until the first non-used
         filename is available.
 
-        :param base_filename: must have two placeholders {cartridge_number} and {i}
-        :returns: full path to the file where to save the data
+        Parameters
+        ----------
+        base_filename : str
+            must have two placeholders {cartridge_number} and {i}
+
+        Returns
+        -------
+        filename : str
+            full path to the file where to save the data
         """
         folder = self.prepare_folder()
         i = 0
@@ -162,12 +182,14 @@ class Fluorescence(Experiment):
 
         return os.path.join(folder, base_filename.format(cartridge_number=cartridge_number, i=i))
 
-    def save_image_fiber_camera(self, filename: str) -> None:
+    def save_image_fiber_camera(self, filename):
         """ Saves the image being registered by the camera looking at the fiber-end. Does not alter the configuration
         of the camera, therefore what you see is what you get.
 
-        :param filename: it assumes it has a placeholder for {cartridge_number} and {i} in order not to over write
-                            files
+        Parameters
+        ----------
+        filename : str
+            It assumes it has a placeholder for {cartridge_number} and {i} in order not to over write files
         """
         self.logger.info('Acquiring image from the fiber')
         self.camera_fiber.stop_free_run()
@@ -182,10 +204,13 @@ class Fluorescence(Experiment):
         self.logger.info(f'Saved fiber data to {filename}')
         self.camera_fiber.start_free_run()
 
-    def save_image_microscope_camera(self, filename: str) -> None:
+    def save_image_microscope_camera(self, filename):
         """Saves the image shown on the microscope camera to the given filename.
 
-        :param str filename: Must be a string containing two placeholders: {cartrdige_number}, {i}
+        Parameters
+        ----------
+        filename : str
+            Must be a string containing two placeholders: {cartrdige_number}, {i}
         """
         filename = self.get_filename(filename)
         t0 = time.time()
@@ -226,7 +251,6 @@ class Fluorescence(Experiment):
         self.logger.info(f'Saving fiber image, max: {np.max(image)}, min: {np.min(image)}')
         filename = self.get_filename(self.config['info']['filename_fiber'])
         np.save(filename, image)
-        # self.save_image_fiber_camera(self.config['info']['filename_fiber'])
 
     @Action
     def save_laser_position(self):
@@ -259,6 +283,21 @@ class Fluorescence(Experiment):
         self.save_image_microscope_camera(base_filename)
 
     def calculate_gaussian_centroid(self, image, x, y, crop_size):
+        """ Calculates the centroid by fitting a gaussian to a portion of the image.
+
+        Parameters
+        ----------
+        image : np.array
+            Image of any size but with 2 dimensions like image[x,y]
+        x : int
+            Horizontal center for the fit
+        y : int
+            Vertical center for the fit
+        crop_size : int
+            How many pixels to crop in each direction.
+
+        .. warning:: Does not take into acount what would happen if the crop size goes beyond the limits of the image
+        """
         x = round(x)
         y = round(y)
         cropped_data = np.copy(image[x - crop_size:x + crop_size, y - crop_size:y + crop_size])
@@ -289,18 +328,17 @@ class Fluorescence(Experiment):
 
         Parameters
         ----------
-        x: float
+        x : int
             x-coordinate for the initial fit of the image
-        y: float
-            y-coordinate for the initail fit of the image
+        y : int
+            y-coordinate for the initial fit of the image
         crop_size: int, optional
             Size of the square crop around x, y in order to minimize errors
         """
         self.logger.info(f'Calculating fiber center using ({x}, {y})')
         image = np.copy(self.camera_fiber.temp_image)
         self.fiber_center_position = self.calculate_gaussian_centroid(image, x, y, crop_size)
-        return [x,y] #m
-
+        return [x,y]
 
     def set_roi(self, y_min, height):
         """ Sets up the ROI of the microscope camera. It assumes the user only crops the vertical direction, since the
@@ -383,296 +421,5 @@ class Fluorescence(Experiment):
             self.camera_microscope.finalize()
         self.set_laser_power(0)
 
-        super(CalibrationSetup, self).finalize()
+        super(Fluorescence, self).finalize()
         self.finalized = True
-
-
-
-    def creating_multiply_array(self,width, height, power=5):
-        # function added by Matthijs (function to create multiply array)
-        #This function is not used right now, and will most likely not be used in the future, so it will probably be
-        #removed.
-        '''This function creates the multiply array which is used to find the fiber core. The inputs are
-        the width and height of the image (in pixels), depending on the camere used. The power
-        determines the relative difference in the values between the middle and the edges of the
-        multiply_array. power is set to 5 by default.'''
-
-        'Required imports'
-        from numpy import linspace, rot90
-
-        '''Below multiply_array_one is created this is an array with the same dimensions as the
-        'image'. This array has high values (approaching 1) towards the vertical middle and low values
-        (approaching 0) towards the bottom and top
-        '''
-        multiply_array_one = (linspace(2, 0, width * height).reshape(height, width) * \
-                              linspace(0, 2, width * height).reshape(height, width))
-
-        '''Below multiply_array_two is created, this is an array with the same dimensions as the
-        'image' rotated by 90 degrees. This array also has high values (approachin 1) towards the
-        vertical middle and low values (approaching 0) towards the upper and lower edge'''
-        multiply_array_two = (linspace(2, 0, width * height).reshape(width, height) * \
-                              linspace(0, 2, width * height).reshape(width, height))
-
-        '''Below multiply_array_two is rotated by 90 degrees. The new array (multiply_array_rot) has
-        the same dimensions as the 'image', and has high values towards the horizontal middle
-        (approaching 1) and low values towards the horizontal (left and right) edges (approaching 0) '''
-        multiply_array_two_rot = rot90(multiply_array_two)
-
-        '''Below multiply_array_one en multiply_array_two_rot are multiplied to create an array with
-        high (approaching 1) values towards both the horizontal and vertical middle, and low
-        (approaching 0) values towards all edges'''
-        multiply_array = multiply_array_one * multiply_array_two_rot
-
-        '''Below the multiply_array is raised to  a power (see function input), to increase the relative
-        difference between the high and low values '''
-        multiply_array = multiply_array ** power
-        return multiply_array
-
-
-    def creating_multiply_array_2(self,width, height, power=2.5):
-        # Function added by Matthijs, (this is an improved version of 'creating_multiply_array'), this fucntain is
-        # destend to be removed, since the function import_or_create_and_save_multiply_array (see below) already
-        # contains this function
-        '''This function is based on the function 'creating_multiply_array' (see description below).
-        Differecne is, that this function produces symmetric multiply_array's, where the function
-        creating_multiply_array creates assymetric multiply arrays. The power is set on 2.5 by default,
-        although values of 2 and 3 yield the same result (2.5 is chosen because it is halfway between
-        2 and 3).
-
-        creating_multiply_array: This function creates the multiply array which is used to find the fiber
-        core. The inputs are the width and height of the image (in pixels), depending on the camere
-        used. The power determines the relative difference in the values between the middle and the
-        edges of the multiply_array. power is set to 5 by default.'''
-
-        'Required imports'
-        from numpy import linspace, rot90, flip
-
-        '''Below multiply_array_one is created this is an array with the same dimensions as the
-        'image'. This array goes from 2 (upper left corner) to 0 (lower right corner) with equal steps
-        '''
-        multiply_array_one = (linspace(2, 0, width * height).reshape(height, width))
-
-        '''Below multiply_array_one is redefined as an array with small values towards the vertical
-        edges and big values towards the vertical middle (the function is symmetric in the horizontal
-        direction)'''
-        multiply_array_one = multiply_array_one * flip(multiply_array_one, 1) * \
-                             rot90(rot90(multiply_array_one)) * flip(rot90(rot90(multiply_array_one)), 1)
-
-        multiply_array_two = (linspace(2, 0, width * height).reshape(width, height))
-        multiply_array_two = multiply_array_two * flip(multiply_array_two, 1) * \
-                             rot90(rot90(multiply_array_two)) * flip(rot90(rot90(multiply_array_two)), 1)
-
-        '''Creating an array with big values towards the middle (aaoriachin 1) and small values
-        towards the edges (approachin 0)'''
-        multiply_array = multiply_array_one * rot90(multiply_array_two)
-
-        '''Below the multiply_array is raised to  a power (see function input), to increase the relative
-        difference between the high and low values '''
-        multiply_array = multiply_array ** power
-        return multiply_array
-
-
-    def import_or_create_and_save_multiply_array(self, width, height):
-        # Function (added by Matthijs) that checks whether the multiply array is stored in a file, and is the prooper
-        # size. If not, the multiply array is created, saved and used.
-        # This function will be replaced very soon by a function that does not have a function within a function, and
-        #is addeded with respect to the notes on page 75.
-        """The inputs are the width and the height of the camera.
-
-        This function checks whether the file (file_name in code) containing the multiply array exists
-        (in the same folder that contains this function). If it exists and is the proper size (width and
-        height), then the multiply array is imported and used. If the file containing the multiply array
-        does not exist (in the folder) or is the wrong size, the multiply array is created (with the
-        function:  'creating_multiply_array_2'), saved in the folder (under file_name), and used."""
-
-        'Necesarry import'
-        from numpy import save, load
-
-        '''Creating File_exist variable as a None. This variable is used to check whether the NumPy
-        array exists'''
-        File_exist = None
-
-        'Name of the file'
-        file_name = 'multiply_array.npy'
-
-        'Function that can create the multiply array if necesarry'
-
-        def creating_multiply_array_2(width, height, power=2.5):
-            # Function (added by Matthijs) that will be removed soon, since there are newer versions to create (or
-            # import) a multiply array.
-            '''This function is based on the function 'creating_multiply_array' (see description below).
-            Differecne is, that this function produces symmetric multiply_array's, where the function
-            creating_multiply_array creates assymetric multiply arrays. The power is set on 2.5 by default,
-            although values of 2 and 3 yield the same result (2.5 is chosen because it is halfway between
-            2 and 3).
-
-            creating_multiply_array: This function creates the multiply array which is used to find the fiber
-            core. The inputs are the width and height of the image (in pixels), depending on the camere
-            used. The power determines the relative difference in the values between the middle and the
-            edges of the multiply_array. power is set to 5 by default.'''
-
-            'Required imports'
-            from numpy import linspace, rot90, flip
-
-            '''Below multiply_array_one is created this is an array with the same dimensions as the
-            'image'. This array goes from 2 (upper left corner) to 0 (lower right corner) with equal steps
-            '''
-            multiply_array_one = (linspace(2, 0, width * height).reshape(height, width))
-
-            # Below multiply_array_one is redefined as an array with small values towards the vertical
-            # edges and big values towards the vertical middle (the function is symmetric in the horizontal
-            # direction)
-            multiply_array_one = multiply_array_one * flip(multiply_array_one, 1) * \
-                                 rot90(rot90(multiply_array_one)) * flip(rot90(rot90(multiply_array_one)), 1)
-
-            multiply_array_two = (linspace(2, 0, width * height).reshape(width, height))
-            multiply_array_two = multiply_array_two * flip(multiply_array_two, 1) * \
-                                 rot90(rot90(multiply_array_two)) * flip(rot90(rot90(multiply_array_two)), 1)
-
-            '''Creating an array with big values towards the middle (aaoriachin 1) and small values
-            towards the edges (approachin 0)'''
-            multiply_array = multiply_array_one * rot90(multiply_array_two)
-
-            '''Below the multiply_array is raised to  a power (see function input), to increase the relative
-            difference between the high and low values '''
-            multiply_array = multiply_array ** power
-            return multiply_array
-
-        'Testen of file bestaat, als '
-        try:
-            multiply_array = load(file_name)
-            print('Try if file exists')
-        except IOError:
-            print("File non existing in folder")
-            File_exist = False
-        else:
-            print('File existing in folder')
-            File_exist = True
-        finally:
-            pass
-
-        'Checking whether the multiply array exist'
-        if File_exist is True:
-            if len(multiply_array[0]) == width and len(multiply_array) == height:
-                print('Good dimension')
-            else:
-                print('Wrong dimensions')
-                print('Create multply array with propper dimensions')
-                multiply_array = creating_multiply_array_2(width, height)
-                print('Save multiply array')
-                save(file_name, multiply_array)
-
-        else:
-            print('Create multiply array')
-            multiply_array = creating_multiply_array_2(width, height)
-            print('Save multiply array')
-            save(file_name, multiply_array)
-
-        return multiply_array
-
-    #Function added by Matthijs (to find the core coordinates)
-    def Code1dot7for_implementation(self,npy_array, multiply_array, n_value=0.001):
-        print(__file__)
-        #The function input npy_file is changed to npy_array, multiply_array is now an input instead
-        #of being created in the code.
-        '''
-        The npy_array is the array from the camera data, the multiply_array is the array which is
-        multiplied with the array created by the camera. The n_value decides whcih part of the pixels
-        will be considerd 'bright' (these are put to 1 in the binary array).
-
-        This code is a modefied version of code 1.7, so it can be implemented to work in the system
-        '''
-
-        #Below 'array' is created, which is the product of the multiply_array and the original array
-        array = (npy_array * multiply_array).astype(int)
-
-        #Determination of the threshold value
-        threshold = round(np.percentile(array, (100 - (100 * n_value)), interpolation='nearest'))
-
-        #Below a binary array is created, pixels above the threshold get assigned the value 1 and
-        #pixels below the threshold get assigned the value 0
-        np_array_binary = np.where(array > threshold, 1, 0)
-
-        #The lines of code below put the edges of the image to 0
-        #Puts the top column to 0
-        np_array_binary[0, :] = 0
-        #Puts the lowest column to 0
-        np_array_binary[-1, :] = 0
-        #Puts the left column to zero
-        np_array_binary[:, 0] = 0
-        #Puts the right column to zero
-        np_array_binary[:, -1] = 0
-
-        #Determination of the bright pixel locations
-        bright_pixel_locations = np.where(np_array_binary == 1)
-
-        #List containing the bright pixel coordinates
-        bright_coords = []
-
-        #Filling the list of bright pixel coordinates
-        for i in range(0, len(bright_pixel_locations[0])):
-            bright_coords.append([bright_pixel_locations[0][i], bright_pixel_locations[1][i]])
-
-        #Previous_length_bright_coords is a variable required in while loop, so the function does not hang, reason for
-        #assigning the value -1, is so, the if statement: if previous_length_bright_coords == len(bright_coords_copy)
-        #can never be 'True' during the first itteration in the while loop.
-        previous_length_bright_coords = -1
-
-        #Number of bright neighbors required
-        bright_negihbors_required = 4
-
-        #In this while loop, the determination of the pixels at the fiber core is done
-        while len(bright_coords) >= 1:
-
-            #Copy of the binary array
-            binary_copy = copy.copy(np_array_binary)
-            bright_coords_copy = copy.copy(bright_coords)
-
-            #In this for loop, for eacht bright pixel the number of bright (direct) neighbors is determined.
-            for i in bright_coords:
-                bright_neighbors = 0
-                if np_array_binary[i[0] - 1][i[1]] == 1:
-                    bright_neighbors = bright_neighbors + 1
-                if np_array_binary[i[0] + 1][i[1]] == 1:
-                    bright_neighbors = bright_neighbors + 1
-                if np_array_binary[i[0]][i[1] - 1] == 1:
-                    bright_neighbors = bright_neighbors + 1
-                if np_array_binary[i[0]][i[1] + 1] == 1:
-                    bright_neighbors = bright_neighbors + 1
-
-                #If a pixel has less bright neighbors than required, it is put to 0.
-                if bright_neighbors < bright_negihbors_required:
-                    binary_copy[i[0]][i[1]] = 0
-                    bright_coords_copy.remove(i)
-                else:
-                    pass
-
-            #If nothing is added to the list bright_coords_copy, the threshold for required bright neighbors is
-            # lowered, and both the binary array as the bright coords list are kept the same
-
-            if len(bright_coords_copy) == 0:
-                bright_negihbors_required = bright_negihbors_required - 1
-            else:
-                np_array_binary = binary_copy
-                bright_coords = bright_coords_copy
-
-            #When there is no more pixel with any bright neighbors, break
-            if bright_negihbors_required == 0:
-                break
-
-            if previous_length_bright_coords == len(bright_coords_copy):
-                #When pixels are no longer being removed, the itteration is stopped with the break commend
-                break
-
-            #Number of bright coordinates during the previous round through the while loop
-            previous_length_bright_coords = len(bright_coords)
-
-        #Determening x- and y coordinate core
-        x = 0
-        y = 0
-        for i in bright_coords:
-            x = x + i[1]
-            y = y + i[0]
-        x = round(x / len(bright_coords))
-        y = round(y / len(bright_coords))
-        self.fiber_center_position = [x,y]

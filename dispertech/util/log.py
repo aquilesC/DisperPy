@@ -1,13 +1,16 @@
-# -*- coding: utf-8 -*-
+# ##############################################################################
+#  Copyright (c) 2021 Aquiles Carattino, Dispertech B.V.                       #
+#  log.py is part of DisperPy                                                  #
+#  This file is released under an MIT license.                                 #
+#  See LICENSE.MD for more information.                                        #
+# ##############################################################################
+
 """
     Logger
     ======
     Adding log capacities to Dispertech
-
-
-    :copyright: Aquiles Carattino, Dispertech B.V.
-    :license: MIT, see LICENSE.md for more details
 """
+
 import logging, multiprocessing
 
 
@@ -20,8 +23,7 @@ def get_logger(name='dispertech', level=logging.INFO):
     return logger
 
 
-PYNTA_LOGGER = get_logger()
-
+DISPER_LOGGER = get_logger()
 
 def log_to_screen(level=logging.INFO, fmt=None):
     fmt = fmt or DEFAULT_FMT
@@ -29,7 +31,7 @@ def log_to_screen(level=logging.INFO, fmt=None):
     handler.setLevel(level)
     formatter = logging.Formatter(fmt)
     handler.setFormatter(formatter)
-    PYNTA_LOGGER.addHandler(handler)
+    DISPER_LOGGER.addHandler(handler)
     return handler
 
 
@@ -39,5 +41,5 @@ def log_to_file(filename, level=logging.INFO, fmt=None):
     handler.setLevel(level)
     formatter = logging.Formatter(fmt)
     handler.setFormatter(formatter)
-    PYNTA_LOGGER.addHandler(handler)
+    DISPER_LOGGER.addHandler(handler)
     return handler

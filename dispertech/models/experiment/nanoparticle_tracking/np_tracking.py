@@ -167,7 +167,7 @@ class NPTracking(Experiment):
         self.config.update(config_values)
 
     def move_mirror(self, speed: int, direction: int, axis: int):
-        self.electronics.move_mirror(direction, speed, axis)
+        self.electronics.move_piezo(direction, speed, axis)
 
     def home_mirror(self):
         """ Routine to find the center position of the mirror. In principle should run only once in a while, one

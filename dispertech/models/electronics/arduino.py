@@ -154,7 +154,7 @@ class ArduinoModel(ModelDevice):
             self._measure_led = status
 
     # @make_async_thread
-    def move_mirror(self, speed: int, direction: int, axis: int):
+    def move_piezo(self, speed: int, direction: int, axis: int):
         """ Moves the mirror connected to the board
 
         :param int speed: Speed, from 0 to 2^6.
@@ -215,9 +215,9 @@ if __name__ == "__main__":
     dev = Arduino.list_devices()[0]
     ard = ArduinoModel(dev)
     ard.laser_power = 50
-    ard.move_mirror(60, 1, 1)
+    ard.move_piezo(60, 1, 1)
     sleep(2)
-    ard.move_mirror(60,0,1)
+    ard.move_piezo(60, 0, 1)
     ard.laser_power = 100
     sleep(2)
     ard.laser_power = 1

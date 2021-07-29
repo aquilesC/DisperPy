@@ -75,16 +75,16 @@ class LaserFocusingWindow(QMainWindow):
         self.button_coarse_movement.setStyleSheet("background-color: green")
 
     def move_up(self):
-        self.experiment.electronics.move_mirror(self.speed, 1, 1)
+        self.experiment.electronics.move_piezo(self.speed, 1, 1)
 
     def move_down(self):
-        self.experiment.electronics.move_mirror(self.speed, 0, 1)
+        self.experiment.electronics.move_piezo(self.speed, 0, 1)
 
     def move_right(self):
-        self.experiment.electronics.move_mirror(self.speed, 1, 2)
+        self.experiment.electronics.move_piezo(self.speed, 1, 2)
 
     def move_left(self):
-        self.experiment.electronics.move_mirror(self.speed, 0, 2)
+        self.experiment.electronics.move_piezo(self.speed, 0, 2)
 
     def change_power(self, power):
         power = int(power)

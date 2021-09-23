@@ -10,10 +10,8 @@ from datetime import datetime
 from multiprocessing import Event
 
 import numpy as np
-import copy as copy #m required in Code1dot7for_implementation
 
 from calibration.models.movie_saver import MovieSaver
-from experimentor.models.experiments.exceptions import ExperimentException
 
 from dispertech.models.electronics.arduino import ArduinoModel
 from experimentor import Q_

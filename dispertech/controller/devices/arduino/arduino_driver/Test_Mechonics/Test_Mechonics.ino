@@ -6,7 +6,12 @@ void setup() {
   // initialize serial ports
   Serial.begin(19200);    // USB serial port 0
   Serial1.begin(19200);   // serial port 1
+  Serial2.begin(19200);
+  Serial3.begin(19200);
   Serial.flush();
+  Serial1.flush();
+  Serial2.flush();
+  Serial3.flush();
 }
 
 void loop() {
@@ -25,7 +30,11 @@ void loop() {
         delay(1);
       }
       rx_byte = Serial.read();
+      delay(1);
       Serial1.write(rx_byte);
+      Serial2.write(rx_byte);
+      Serial3.write(rx_byte);
+      Serial.write(rx_byte);
       Serial.println("OK");
     }
     serialString = "";

@@ -22,7 +22,7 @@ rm = pyvisa.ResourceManager('@py')
 
 
 class ArduinoModel(ModelDevice):
-    def __init__(self, port=None, device=0):
+    def __init__(self, port=None, device=0, initial_config=None):
         """ Use the port if you know where the Arduino is connected, or use the device number in the order shown by
         pyvisa.
         """
@@ -35,17 +35,19 @@ class ArduinoModel(ModelDevice):
         self.driver = None
         self.port = port
         self.device = device
+        self.initial_config = initial_config
 
         self.logger = get_logger()
 
-        self._laser_power = 0
+        self._scattering_laser_power = None
+        self._fluo_laser_power = None
         self._laser_led = 0
         self._fiber_led = 0
         self._top_led = 0
         self._side_led = 0
         self._power_led = 0
         self._measure_led = 0
-        self._servo_position = 0
+
 
     @make_async_thread
     def initialize(self):
@@ -65,33 +67,46 @@ class ArduinoModel(ModelDevice):
                     self.driver.read()
                 except VisaIOError:
                     pass
-
-        self.laser_power = 0
-        self.fiber_led = 0
-        self.top_led = 0
-        self.side_led = 0
-        self.servo = 0
+            self.config.fetch_all()
+            if self.initial_config is not None:
+                self.config.update(self.initial_config)
+                self.config.apply_all()
 
     @Feature()
-    def laser_power(self):
-        """ Changes the laser power. It also switches on or off the laser LED based on the power level set.
+    def scattering_laser(self):
+        """ Changes the laser power.
 
         Parameters
         ----------
-        power int: Percentage of power (0-100)
+        power : int
+            Percentage of power (0-100)
         """
-        return self._laser_power
+        return self._scattering_laser_power
 
-    @laser_power.setter
-    def laser_power(self, power: int):
+    @scattering_laser.setter
+    def scattering_laser(self, power):
         with self.query_lock:
             out_power = round(power/100*4095)
-            if out_power < 100:
-                self.laser_led = 0
-            else:
-                self.laser_led = 1
             self.driver.query(f'OUT:{out_power}')
-            self._laser_power = int(power)
+            self._scattering_laser_power = int(power)
+
+    @Feature()
+    def fluo_laser(self):
+        """ Changes the power of the laser used for fluorescence.
+
+        Parameters
+        ----------
+        power : int
+            Percentage of power (0-100)
+        """
+        return self._fluo_laser_power
+
+    @fluo_laser.setter
+    def fluo_laser(self, power):
+        with self.query_lock:
+            out_power = round(power/100*4095)
+            self.driver.query(f'OUT:488:{out_power}')
+            self._scattering_laser_power = int(power)
 
     @Feature()
     def side_led(self):
@@ -154,12 +169,17 @@ class ArduinoModel(ModelDevice):
             self._measure_led = status
 
     # @make_async_thread
-    def move_piezo(self, speed: int, direction: int, axis: int):
+    def move_piezo(self, speed, direction, axis):
         """ Moves the mirror connected to the board
 
-        :param int speed: Speed, from 0 to 2^6.
-        :param direction: 0 or 1, depending on which direction to move the mirror
-        :param axis: 1 or 2, to select the axis
+        Parameters
+        ----------
+        speed : int
+            Speed, from 0 to 2^6-1
+        direction : int
+            0 or 1, depending on which direction to move the mirror
+        axis : int
+            1, 2, or 3 to select the axis. Normally 1 and 2 are the mirror and 3 is the lens
         """
         with self.query_lock:
             binary_speed = '{0:06b}'.format(speed)
@@ -168,7 +188,7 @@ class ArduinoModel(ModelDevice):
             bytestring = number.to_bytes(1, 'big')
             self.driver.query(f"mot{axis}")
             self.driver.write_raw(bytestring)
-            ans = self.driver.read()
+            self.driver.read()
         self.logger.info('Finished moving')
 
     @make_async_thread
@@ -179,31 +199,12 @@ class ArduinoModel(ModelDevice):
                 self.temp_sample = float(self.driver.query("TEM:1"))
             sleep(5)
 
-    @Feature()
-    def servo(self):
-        return self._servo_position
-
-    @servo.setter
-    def servo(self, position):
-        with self.query_lock:
-            self.driver.query(f'serv:{position}')
-
-    def move_servo(self, position: int):
-        """Moves the servo to position either 0 (off) or 1 (on).
-        The angle the servo moves is coded directly on the electronics code.
-
-        .. TODO:: Perhaps is best to have flexibility and provide the position as a parameter in Python instead of
-            low-level determining it.
-        """
-        with self.query_lock:
-            self.driver.query(f"serv:{position}")
-
     def finalize(self):
         self.logger.info('Finalizing Arduino')
         self._stop_temperature.set()
-        self.fiber_led = 0
-        self.top_led = 0
-        self.laser_power = 0
+        if self.initial_config is not None:
+            self.config.update(self.initial_config)
+            self.config.apply_all()
         self.clean_up_threads()
         if len(self._threads):
             self.logger.warning(f'There are {len(self._threads)} still alive in Arduino')

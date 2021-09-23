@@ -11,7 +11,8 @@ import numpy as np
 
 from dispertech.models.electronics.arduino import ArduinoModel
 from experimentor.lib import fitgaussian
-from experimentor.models.devices.cameras.basler.basler import BaslerCamera
+from experimentor.models.action import Action
+from experimentor.models.devices.cameras.basler.basler import BaslerCamera as Camera
 from experimentor.models.decorators import make_async_thread
 from experimentor.models.experiments.base_experiment import Experiment, FormatDict
 
@@ -19,34 +20,58 @@ from experimentor.models.experiments.base_experiment import Experiment, FormatDi
 class Dispertech(Experiment):
     def __init__(self, config_file=None):
         super().__init__(filename=config_file)
-        self.camera_microscope = BaslerCamera(self.config['camera_microscope']['init'])
-        self.camera_fiber = BaslerCamera(self.config['camera_fiber']['init'])
-        self.electronics = ArduinoModel(self.config['electronics']['init'])
-        self.initializing = None  # None means has not been initialized, True means is happening, False means it's done
+
+        self.camera_microscope = None
+        self.camera_fiber = None
+        self.electronics = None
+        self.initialized = None  # None means has not been initialized, True means is happening, False means it's done
+
+    @Action
+    def initialize(self):
+        """ Initialize the cameras and the electronics without starting a continuous acquisition.
+        """
+        self.initialized = False
+        self.initialize_cameras()
+        self.initialized = True
 
     def initialize_cameras(self):
         """Initializes the cameras, it assumes we are using Basler cameras for both the fiber end and the microscope.
         It also sets some sensible parameters for the purposes of the experiment at hand, for example it disables auto
         exposure and auto gain.
         """
-        self.camera_microscope.initialize()
-        self.camera_fiber.initialize()
-        self.camera_microscope.config.update(self.config['camera_microscope']['config'])
-        self.camera_microscope.config.apply_all()
-        self.camera_fiber.config.update(self.config['camera_fiber']['config'])
-        self.camera_fiber.config.apply_all()
+        self.logger.info('Initializing cameras')
+        config_mic = self.config['camera_microscope']
+        self.camera_microscope = Camera(config_mic['init'], initial_config=config_mic['config'])
+
+        config_fiber = self.config['camera_fiber']
+        self.camera_fiber = Camera(config_fiber['init'], initial_config=config_fiber['config'])
+
+        for cam in (self.camera_fiber, self.camera_microscope):
+            self.logger.info(f'Initializing {cam}')
+            cam.initialize()
 
     def initialize_electronics(self):
         """Initializes the electronics, assuming there are two arduinos connected one for the servo and one for the
         rest."""
+        self.logger.info('Initializing electronics')
+        self.electronics = ArduinoModel(**self.config['electronics']['arduino'])
         self.electronics.initialize()
+
+    def move_mirror(self, direction, axis, speed=1):
+        """ Moves the mirror connected to the electronics
+
+        :param direction: 0 or 1, depending on the direction to move the mirror
+        :param axis: 1 or 2, axis means top/down or left/right each is addressed by a different controller
+        :param int speed: Speed, from 0 to 2^6. A speed of 0 stops the ongoing movement, a speed of 1 is a single step.
+        """
+        self.electronics.move_piezo(speed, direction, axis)
 
     @make_async_thread
     def initialize(self):
-        self.initializing = True
+        self.initialized = True
         self.initialize_electronics()
         self.initialize_cameras()
-        self.initializing = False
+        self.initialized = False
 
     @make_async_thread
     def start_fiber_focus(self):

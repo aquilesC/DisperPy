@@ -56,10 +56,14 @@ void loop() {
       else if (Comm.startsWith("mot3")) {
         digitalWrite(piezo_Z2, HIGH); // Currently, the only option connected is the SMA cable on the PCB
       }
+      else if (Comm.startsWith("mot4")){
+        digitalWrite(piezo_Z1, HIGH);
+      }
       Serial.println("Waiting motion input");
       while (Serial.available() <= 0 ) {
         delay(1);
       }
+      delay(10);
       rx_byte = Serial.read();
       mySerial.write(rx_byte);
       bool is_step = true;

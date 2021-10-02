@@ -47,10 +47,10 @@ void setup()
   // set the data rate for the SoftwareSerial port
   mySerial.begin(19200);
   pinMode(4, OUTPUT);
-  pinMode(5, OUTPUT);
+  pinMode(8, OUTPUT);
   pinMode(6, OUTPUT);
   digitalWrite(4, LOW);
-  digitalWrite(5, LOW);
+  digitalWrite(8, LOW);
   digitalWrite(6, LOW);
 }
 
@@ -97,7 +97,7 @@ void loop() {
       digitalWrite(4, LOW);
     }
     else if (Comm.startsWith("mot3")) {
-      digitalWrite(5, HIGH);
+      digitalWrite(8, HIGH);
       Serial.println("Waiting for input mot 3");
       while (Serial.available() <= 0) {
         delay(1);
@@ -124,7 +124,7 @@ void loop() {
         mySerial.write(rx_byte);
       }
       Serial.println("OK");
-      digitalWrite(5, LOW);
+      digitalWrite(8, LOW);
     }
     else if (Comm.startsWith("mot2")) {
       digitalWrite(6, HIGH);

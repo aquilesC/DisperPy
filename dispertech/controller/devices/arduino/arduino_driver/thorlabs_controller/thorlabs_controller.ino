@@ -18,7 +18,6 @@ void setup() {
   while(!Serial);
   pinMode(DAC_Select, OUTPUT);
   digitalWrite(DAC_Select, HIGH);
-  
 }
 
 void loop() {

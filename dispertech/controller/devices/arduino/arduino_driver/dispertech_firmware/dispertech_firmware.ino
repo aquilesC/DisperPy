@@ -101,10 +101,14 @@ void loop() {
         digitalWrite(piezo_Z2, HIGH);
         Serial.print("mot4:");
       }
+      else if (Comm.startsWith("mot4")){
+        digitalWrite(piezo_Z1, HIGH);
+      }
       Serial.println("Waiting motion input");
       while (Serial.available() <= 0 ) {
         delay(1);
       }
+      delay(10);
       rx_byte = Serial.read();
      // Serial.println(rx_byte, BIN);
       mySerial.write(rx_byte);

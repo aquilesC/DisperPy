@@ -26,12 +26,13 @@ class Dispertech(Experiment):
         self.electronics = None
         self.initialized = None  # None means has not been initialized, True means is happening, False means it's done
 
-    @Action
+    @make_async_thread
     def initialize(self):
         """ Initialize the cameras and the electronics without starting a continuous acquisition.
         """
         self.initialized = False
         self.initialize_cameras()
+        self.initialize_electronics()
         self.initialized = True
 
     def initialize_cameras(self):
@@ -67,11 +68,22 @@ class Dispertech(Experiment):
         self.electronics.move_piezo(speed, direction, axis)
 
     @make_async_thread
-    def initialize(self):
-        self.initialized = True
-        self.initialize_electronics()
-        self.initialize_cameras()
-        self.initialized = False
+    def start_microscope_focus(self):
+        """ Starts the microscope focusing procedure. It switches off the laser, and switches on the LED from the top
+        in order to see the core hole on the microscope camera.
+        """
+        self.logger.info('Starting the microscope focus free run')
+        self.cameras['camera_fiber'].stop_camera()
+        self.electronics.fiber_led = 0
+        self.electronics.side_led = 0
+        self.electronics.top_led = 1
+
+        self.electronics.laser_power = 0
+
+        self.config['camera_microscope'].update(self.config['microscope_focus'])
+        self.cameras['camera_microscope'].stop_camera()
+        self.cameras['camera_microscope'].configure(self.config['camera_microscope'])
+        self.cameras['camera_microscope'].start_free_run()
 
     @make_async_thread
     def start_fiber_focus(self):
@@ -79,33 +91,27 @@ class Dispertech(Experiment):
         switch on the LED and off the Laser. """
 
         self.camera_microscope.stop_camera()
+
         self.electronics.fiber_led = 1
         self.electronics.top_led = 0
+        self.electronics.side_led = 0
+
         self.electronics.laser_power = 0
-        self.electronics['servo'].move_servo(0)
+
         self.config['camera_fiber'].update(self.config['laser_focusing'])
         self.cameras['camera_fiber'].stop_camera()
         self.cameras['camera_fiber'].configure(self.config['camera_fiber'])
         self.cameras['camera_fiber'].start_free_run()
 
-    @make_async_thread
-    def start_microscope_focus(self):
-        """ Starts the microscope focusing procedure. It switches off the laser, and switches on the LED from the top
-        in order to see the fiber core on the microscope camera.
-        """
-        self.cameras['camera_fiber'].stop_camera()
-        self.electronics['main_electronics'].fiber_led = 0
-        self.electronics['main_electronics'].top_led = 1
-        self.electronics['main_electronics'].laser_power = 0
-        self.electronics['servo'].move_servo(0)
-        self.config['camera_microscope'].update(self.config['microscope_focus'])
-        self.cameras['camera_microscope'].stop_camera()
-        self.cameras['camera_microscope'].configure(self.config['camera_microscope'])
-        self.cameras['camera_microscope'].start_free_run()
+    def crop_microscope_image(self, y):
+        """Sets the ROI on the microscope camera, assuming one is interested in cropping only vertically.
 
-    def crop_microscope_image(self, y: List[float]):
-        """Sets the ROI on the microscope camera"""
-        y.sort()
+        Parameters
+        ----------
+        y : list or tuple
+            Pixels that limit the rows for the ROI. Must be integers or they will be casted.
+        """
+        y = sorted(y)
 
         self.config['camera_microscope']['roi_y1'] = int(y[0])
         self.config['camera_microscope']['roi_y2'] = int(y[1])
@@ -114,8 +120,13 @@ class Dispertech(Experiment):
         self.cameras['camera_microscope'].start_free_run()
 
     def clear_microscope_crop(self):
+        """ Clears the ROI from the microscope camera and starts a free run.
+
+        .. TODO:: check whether it is reasonable to trigger the camera after clearing the ROI
+        """
         self.config['camera_microscope'].stop_camera()
         self.config['camera_microscope'].clear_ROI()
+        self.config['camera_microscope'].start_free_run()
 
     def done_fiber_focus(self, x: float, y:float):
         """ When the focusing is done, the user must click close to the fiber core in order to record it's position.

@@ -16,10 +16,17 @@ const int LED_READY = 17;
 const int LED_SIDE = 18;
 const int LED_FIBER = 19;
 const int LED_TOP = 20;
+int POWER_STATUS = LOW;
+int PROCESSING_STATUS = LOW;
+int INITIALISING_STATUS = LOW;
+int READY_STATUS = LOW;
+int SIDE_STATUS = LOW;
+int FIBER_STATUS = LOW;
+int TOP_STATUS = LOW;
 
 // Variables and constants for the Piezo movement
 byte rx_byte = 0; // Encodes the speed/direction
-const int piezo_delay = 200; // Amount of time before stopping the movement in case it is not a single-step
+const int piezo_delay = 20; // Amount of time before stopping the movement in case it is not a single-step
 const int piezo_X = 8;
 const int piezo_Y = 4;
 const int piezo_Z1 = 5;
@@ -108,7 +115,7 @@ void loop() {
       while (Serial.available() <= 0 ) {
         delay(1);
       }
-      delay(10);
+      delay(1);
       rx_byte = Serial.read();
      // Serial.println(rx_byte, BIN);
       mySerial.write(rx_byte);
@@ -159,6 +166,10 @@ void loop() {
     else if (Comm.startsWith("IDN")) {
       Serial.println("Dispertech device 2.0-scattering");
     }
+    else if (Comm.startsWith("LED")){
+      if (Comm.startsWith("LED:TOP"){
+        }
+      }
     else {
       Serial.println("Command not known");
     }

@@ -57,7 +57,7 @@ class ArduinoModel(ModelDevice):
         with self.query_lock:
             if not self.port:
                 port = Arduino.list_devices()[self.device]
-            self.driver = rm.open_resource(port, baud_rate=19200)
+            self.driver = rm.open_resource(port, baud_rate=115200)
             sleep(2)
             # This is very silly, but clears the buffer so that next messages are not broken
             try:
@@ -86,8 +86,8 @@ class ArduinoModel(ModelDevice):
     @scattering_laser.setter
     def scattering_laser(self, power):
         with self.query_lock:
-            out_power = round(power/100*4095)
-            self.driver.query(f'OUT:{out_power}')
+            # out_power = round(power/100*4095)
+            self.driver.query(f'laser:{power}')
             self._scattering_laser_power = int(power)
 
     @Feature()

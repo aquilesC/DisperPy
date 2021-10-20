@@ -26,7 +26,7 @@ int TOP_STATUS = LOW;
 
 // Variables and constants for the Piezo movement
 byte rx_byte = 0; // Encodes the speed/direction
-const int piezo_delay = 20; // Amount of time before stopping the movement in case it is not a single-step
+const int piezo_delay = 100; // Amount of time before stopping the movement in case it is not a single-step
 const int piezo_X = 8;
 const int piezo_Y = 4;
 const int piezo_Z1 = 5;
@@ -108,16 +108,13 @@ void loop() {
         digitalWrite(piezo_Z2, HIGH);
         Serial.print("mot4:");
       }
-      else if (Comm.startsWith("mot4")){
-        digitalWrite(piezo_Z1, HIGH);
-      }
       Serial.println("Waiting motion input");
       while (Serial.available() <= 0 ) {
         delay(1);
       }
-      delay(1);
+      delay(10);
       rx_byte = Serial.read();
-     // Serial.println(rx_byte, BIN);
+      Serial.println(rx_byte, BIN);
       mySerial.write(rx_byte);
       bool is_step = true;
       for (int bits = 5; bits > 0; bits--) {
@@ -129,13 +126,15 @@ void loop() {
         is_step = false;
       }
       if (!(rx_byte & (1 << 7)) && is_step) { // In one of the directions it must take 2 steps in order to move one at a time
-        delay(piezo_delay);
+        //delay(piezo_delay);
+        delay(10);
         mySerial.write(rx_byte);
       }
       if (!is_step) {
         delay(piezo_delay);
         rx_byte = 0;
         mySerial.write(rx_byte);
+        delay(2);
       }
       Serial.println("Movement OK");
       digitalWrite(piezo_X, LOW);
@@ -167,7 +166,8 @@ void loop() {
       Serial.println("Dispertech device 2.0-scattering");
     }
     else if (Comm.startsWith("LED")){
-      if (Comm.startsWith("LED:TOP"){
+      if (Comm.startsWith("LED:TOP")){
+        digitalWrite(LED_TOP, HIGH);
         }
       }
     else {

@@ -73,7 +73,7 @@ class ArduinoModel(ModelDevice):
                 self.config.apply_all()
 
     @Feature()
-    def laser_power(self):
+    def scattering_laser(self):
         """ Changes the laser power.
 
         Parameters
@@ -83,11 +83,13 @@ class ArduinoModel(ModelDevice):
         """
         return self._scattering_laser_power
 
-    @laser_power.setter
-    def laser_power(self, power):
+    @scattering_laser.setter
+    def scattering_laser(self, power):
         with self.query_lock:
             # out_power = round(power/100*4095)
-            self.driver.query(f'laser:{power}')
+            self.logger.info(f'laser:{power}')
+            print(self.driver.query(f'laser:{power}'))
+            print(power)
             self._scattering_laser_power = int(power)
 
     @Feature()

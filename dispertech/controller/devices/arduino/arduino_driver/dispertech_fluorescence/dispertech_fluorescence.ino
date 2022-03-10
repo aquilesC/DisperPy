@@ -38,9 +38,11 @@ const int piezo_Z2 = 6;
 SoftwareSerial mySerial(10, 3); // RX, TX
 
 // Variables to setup the DAC and the Laser
-const int DAC_Select = 7; // This pin is used to enable the DAC
+const int Select_633 = 7;
+const int Select_488 = 10; // This pin is used to enable the DAC
 float power;
 int output_value;
+int dac;
 String tempValue;
 const int STATUS_pin = 9;
 
@@ -51,7 +53,8 @@ void setup() {
   pinMode(piezo_Z1, OUTPUT);
   pinMode(piezo_Z2, OUTPUT);
   pinMode(STATUS_pin, INPUT);
-  pinMode(DAC_Select, OUTPUT);
+  pinMode(Select_633, OUTPUT);
+  pinMode(Select_488, OUTPUT);
   pinMode(LED_POWER, OUTPUT);
   pinMode(LED_PROCESSING, OUTPUT);
   pinMode(LED_INITIALISING, OUTPUT);
@@ -82,7 +85,8 @@ void setup() {
   mySerial.flush();
   SPI.begin();
 
-  digitalWrite(DAC_Select, HIGH);
+  digitalWrite(Select_633, HIGH);
+  digitalWrite(Select_488, HIGH);
 
   digitalWrite(LED_POWER, HIGH);
   digitalWrite(LED_PROCESSING, LOW);
@@ -164,11 +168,7 @@ void loop() {
       digitalWrite(piezo_Z2, LOW);
     }
     else if (Comm.startsWith("laser")) {
-      output_value = digitalRead(STATUS_pin);
-      Serial.print("Status:");
-      Serial.print(output_value);
-      Serial.print(",");
-      for (i = 6; i <= Comm.length(); i++) {
+      for (i = 7; i <= Comm.length(); i++) {
         tempValue += Comm[i];
       }
       power = tempValue.toFloat();
@@ -178,7 +178,9 @@ void loop() {
       }
       else {
         output_value = 4095 * power / 100;
-        write_dac(output_value);
+        if (Comm.startsWith("laser1:")){dac = Select_633;}
+        else {dac=Select_488;}
+        write_dac(output_value, dac);
         Serial.print("LASER:");
         Serial.println(output_value);
       }
@@ -213,7 +215,7 @@ void loop() {
       Serial.println("LED changed");
     }
     else if (Comm.startsWith("IDN")) {
-      Serial.println("Dispertech device 2.0-scattering");
+      Serial.println("Dispertech device 2.0-fluorescence");
     }
     else if (Comm.startsWith("LED")) {
       if (Comm.startsWith("LED:TOP")) {
@@ -230,10 +232,10 @@ void loop() {
   delay(2);
 }
 
-void write_dac(int value) {
+void write_dac(int value, int DAC_Select) {
   digitalWrite(DAC_Select, LOW);
   SPI.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE0));
-  byte head = 0b00010000;
+  byte head = 0b00110000;
   int new_value = value >> 8;
   int new_new_value = value & 0b0000000011111111;
   SPI.transfer(head | new_value);

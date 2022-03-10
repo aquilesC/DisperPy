@@ -22,7 +22,7 @@ rm = pyvisa.ResourceManager('@py')
 
 
 class ArduinoModel(ModelDevice):
-    def __init__(self, port=None, device=0, initial_config=None):
+    def __init__(self, port=None, device=0, baud_rate=9600, initial_config=None):
         """ Use the port if you know where the Arduino is connected, or use the device number in the order shown by
         pyvisa.
         """
@@ -36,6 +36,7 @@ class ArduinoModel(ModelDevice):
         self.port = port
         self.device = device
         self.initial_config = initial_config
+        self.baud_rate = baud_rate
 
         self.logger = get_logger()
 
@@ -56,9 +57,10 @@ class ArduinoModel(ModelDevice):
         """
         with self.query_lock:
             if not self.port:
-                port = Arduino.list_devices()[self.device]
-            self.driver = rm.open_resource(port, baud_rate=115200)
-            sleep(2)
+                self.port = Arduino.list_devices()[self.device]
+            self.driver = rm.open_resource(self.port)
+            sleep(1)
+            self.driver.baud_rate = self.baud_rate
             # This is very silly, but clears the buffer so that next messages are not broken
             try:
                 self.driver.query("IDN")
@@ -86,10 +88,8 @@ class ArduinoModel(ModelDevice):
     @scattering_laser.setter
     def scattering_laser(self, power):
         with self.query_lock:
-            # out_power = round(power/100*4095)
+            self.driver.query(f'laser:{power}')
             self.logger.info(f'laser:{power}')
-            print(self.driver.query(f'laser:{power}'))
-            print(power)
             self._scattering_laser_power = int(power)
 
     @Feature()
@@ -108,7 +108,7 @@ class ArduinoModel(ModelDevice):
         with self.query_lock:
             out_power = round(power/100*4095)
             self.driver.query(f'OUT:488:{out_power}')
-            self._scattering_laser_power = int(power)
+            self._fluo_laser_power = int(power)
 
     @Feature()
     def side_led(self):
@@ -119,6 +119,7 @@ class ArduinoModel(ModelDevice):
         with self.query_lock:
             self.driver.query(f'LED:0:{status}')
             self._side_led = status
+            self.logger.info(f'LED:2:{status}')
 
     @Feature()
     def top_led(self):
@@ -127,8 +128,9 @@ class ArduinoModel(ModelDevice):
     @top_led.setter
     def top_led(self, status):
         with self.query_lock:
-            self.driver.query(f'LED:1:{status}')
+            self.driver.query(f'LED:2:{status}')
             self._top_led = status
+            self.logger.info(f'LED:2:{status}')
 
     @Feature()
     def fiber_led(self):
@@ -137,8 +139,9 @@ class ArduinoModel(ModelDevice):
     @fiber_led.setter
     def fiber_led(self, status):
         with self.query_lock:
-            self.driver.query(f'LED:2:{status}')
+            self.driver.query(f'LED:1:{status}')
             self._fiber_led = status
+            self.logger.info(f'LED:2:{status}')
 
     @Feature()
     def power_led(self):
@@ -149,26 +152,40 @@ class ArduinoModel(ModelDevice):
         with self.query_lock:
             self.driver.query(f'LED:3:{status}')
             self._power_led = status
+            self.logger.info(f'LED:2:{status}')
 
     @Feature()
-    def laser_led(self):
+    def processing_led(self):
         return self._laser_led
 
-    @laser_led.setter
-    def laser_led(self, status: int):
+    @processing_led.setter
+    def processing_led(self, status: int):
         with self.query_lock:
             self.driver.query(f'LED:4:{status}')
             self._laser_led = status
+            self.logger.info(f'LED:2:{status}')
 
     @Feature()
-    def measure_led(self):
+    def initialising_led(self):
         return self._measure_led
 
-    @measure_led.setter
-    def measure_led(self, status):
+    @initialising_led.setter
+    def initialising_led(self, status):
         with self.query_lock:
             self.driver.query(f'LED:5:{status}')
             self._measure_led = status
+            self.logger.info(f'LED:2:{status}')
+
+    @Feature()
+    def ready_led(self):
+        return self._measure_led
+
+    @ready_led.setter
+    def ready_led(self, status):
+        with self.query_lock:
+            self.driver.query(f'LED:5:{status}')
+            self._measure_led = status
+            self.logger.info(f'LED:2:{status}')
 
     # @make_async_thread
     def move_piezo(self, speed, direction, axis):

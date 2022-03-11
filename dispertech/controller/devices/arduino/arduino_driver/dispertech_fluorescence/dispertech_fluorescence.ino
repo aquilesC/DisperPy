@@ -185,6 +185,9 @@ void loop() {
         Serial.println(output_value);
       }
     }
+    else if(Comm.startsWith("status")){
+      Serial.println(digitalRead(STATUS_pin));  
+    }
     else if (Comm.startsWith("LED")) {
       int val = Comm.substring(4, 5).toInt();
       int mode = Comm.substring(6, 7).toInt();

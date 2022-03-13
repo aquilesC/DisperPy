@@ -38,7 +38,7 @@ const int piezo_Z2 = 6;
 SoftwareSerial mySerial(10, 3); // RX, TX
 
 // Variables to setup the DAC and the Laser
-const int Select_633 = 7;
+const int Select_633 = 7;  // This pin is used to enable the DAC
 const int Select_488 = 10; // This pin is used to enable the DAC
 float power;
 int output_value;
@@ -92,6 +92,8 @@ void setup() {
   digitalWrite(LED_PROCESSING, LOW);
   digitalWrite(LED_INITIALISING, LOW);
   digitalWrite(LED_READY, LOW);
+  write_dac(0, Select_633);
+  write_dac(0, Select_488);
 }
 
 void loop() {
@@ -178,10 +180,15 @@ void loop() {
       }
       else {
         output_value = 4095 * power / 100;
-        if (Comm.startsWith("laser1:")){dac = Select_633;}
-        else {dac=Select_488;}
+        if (Comm.startsWith("laser1:")){
+          dac = Select_633;
+          Serial.print("LASER_633:");
+          }
+        else {
+          dac=Select_488;
+          Serial.print("LASER_488:");
+          }
         write_dac(output_value, dac);
-        Serial.print("LASER:");
         Serial.println(output_value);
       }
     }

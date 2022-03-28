@@ -26,6 +26,7 @@ class Arduino:
         """
         self.rsc = None
         self.port = port
+        self.closed = False
         if port:
             if not port.startswith('ASRL'):
                 port = 'ASRL' + port
@@ -43,6 +44,9 @@ class Arduino:
         self.rsc.write(command)
 
     def close(self):
+        if self.closed:
+            logger.info('Closing a closed resource')
+            return
         self.rsc.close()
 
     @staticmethod

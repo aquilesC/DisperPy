@@ -45,6 +45,8 @@ int output_value;
 String tempValue;
 const int STATUS_pin = 9;
 
+// Variables for the shift register (that controls LED's)
+byte shift_status = 0;
 
 void setup() {
   pinMode(piezo_X, OUTPUT);
@@ -185,7 +187,11 @@ void loop() {
       int start_led = Comm.indexOf(":") + 1;
       int end_led = Comm.lastIndexOf(":");
       String LED = Comm.substring(start_led, end_led);
-      int mode = Comm.substring(end_led, Comm.length()).toInt();
+      int mode = Comm.substring(end_led+1, Comm.length()).toInt();
+      Serial.println(start_led);
+      Serial.println(end_led);
+      Serial.println(LED);
+      Serial.println(Comm.substring(end_led+1, Comm.length()));
       if (LED == "SIDE") {
         digitalWrite(LED_SIDE, mode);
       }
@@ -196,19 +202,51 @@ void loop() {
         digitalWrite(LED_FIBER, mode);
       }
       else if (LED == "POWER") {
-        digitalWrite(LED_POWER, mode);
+        bitClear(shift_status, 0);
+        bitClear(shift_status, 1);
+        if (mode == 1){
+          bitSet(shift_status, 1);
+          }
+          else if (mode == 2){
+            bitSet(shift_status, 0);
+          }
+        write_shift(shift_status);
       }
       else if (LED == "CARTRIDGE") {
-        digitalWrite(LED_CARTRIDGE, mode);
+        bitClear(shift_status, 2);
+        bitClear(shift_status, 3);
+        if (mode == 1){
+          bitSet(shift_status, 3);
+          }
+          else if (mode == 2){
+            bitSet(shift_status, 2);
+          }
+        write_shift(shift_status);
       }
       else if (LED == "SAMPLE") {
-        digitalWrite(LED_SAMPLE, mode);
+       bitClear(shift_status, 4);
+        bitClear(shift_status, 5);
+        if (mode == 1){
+          bitSet(shift_status, 5);
+          }
+          else if (mode == 2){
+            bitSet(shift_status, 4);
+          }
+        write_shift(shift_status);
       }
       else if (LED == "MEASURING") {
-        digitalWrite(LED_MEASURING, mode);
+        bitClear(shift_status, 6);
+        bitClear(shift_status, 7);
+        if (mode == 1){
+          bitSet(shift_status, 7);
+          }
+          else if (mode == 2){
+            bitSet(shift_status, 6);
+          }
+        write_shift(shift_status);
       }
       Serial.print(LED);
-      Serial.print(" changed mode to");
+      Serial.print(" changed mode to ");
       Serial.println(mode);
     }
     else if (Comm.startsWith("IDN")) {
@@ -251,12 +289,13 @@ void loop() {
   delay(2);
 }
 
-void write_shift(int value) {
+void write_shift(byte value) {
   digitalWrite(register_select, LOW);
   SPI.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE0));
   SPI.transfer(value);
   digitalWrite(register_select, HIGH);
   SPI.endTransaction();
+  Serial.println(value);
 }
 
 void write_dac(int value) {

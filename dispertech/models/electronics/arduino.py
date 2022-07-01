@@ -74,6 +74,8 @@ class ArduinoModel(ModelDevice):
                 self.config.update(self.initial_config)
                 self.config.apply_all()
 
+            self.logger.info(self.driver.query(f'INI'))
+
     @Feature()
     def scattering_laser(self):
         """ Changes the laser power.
@@ -119,7 +121,7 @@ class ArduinoModel(ModelDevice):
         with self.query_lock:
             self.driver.query(f'LED:0:{status}')
             self._side_led = status
-            self.logger.info(f'LED:2:{status}')
+            self.logger.info(f'LED:0:{status}')
 
     @Feature()
     def top_led(self):
@@ -128,9 +130,9 @@ class ArduinoModel(ModelDevice):
     @top_led.setter
     def top_led(self, status):
         with self.query_lock:
-            self.driver.query(f'LED:2:{status}')
+            self.driver.query(f'LED:1:{status}')
             self._top_led = status
-            self.logger.info(f'LED:2:{status}')
+            self.logger.info(f'LED:1:{status}')
 
     @Feature()
     def fiber_led(self):
@@ -139,7 +141,7 @@ class ArduinoModel(ModelDevice):
     @fiber_led.setter
     def fiber_led(self, status):
         with self.query_lock:
-            self.driver.query(f'LED:1:{status}')
+            self.driver.query(f'LED:2:{status}')
             self._fiber_led = status
             self.logger.info(f'LED:2:{status}')
 
@@ -152,7 +154,7 @@ class ArduinoModel(ModelDevice):
         with self.query_lock:
             self.driver.query(f'LED:3:{status}')
             self._power_led = status
-            self.logger.info(f'LED:2:{status}')
+            self.logger.info(f'LED:3:{status}')
 
     @Feature()
     def processing_led(self):
@@ -163,7 +165,7 @@ class ArduinoModel(ModelDevice):
         with self.query_lock:
             self.driver.query(f'LED:4:{status}')
             self._laser_led = status
-            self.logger.info(f'LED:2:{status}')
+            self.logger.info(f'LED:4:{status}')
 
     @Feature()
     def initialising_led(self):
@@ -174,7 +176,7 @@ class ArduinoModel(ModelDevice):
         with self.query_lock:
             self.driver.query(f'LED:5:{status}')
             self._measure_led = status
-            self.logger.info(f'LED:2:{status}')
+            self.logger.info(f'LED:5:{status}')
 
     @Feature()
     def ready_led(self):
@@ -183,9 +185,9 @@ class ArduinoModel(ModelDevice):
     @ready_led.setter
     def ready_led(self, status):
         with self.query_lock:
-            self.driver.query(f'LED:5:{status}')
+            self.driver.query(f'LED:6:{status}')
             self._measure_led = status
-            self.logger.info(f'LED:2:{status}')
+            self.logger.info(f'LED:6:{status}')
 
     # @make_async_thread
     def move_piezo(self, speed, direction, axis):
@@ -200,27 +202,20 @@ class ArduinoModel(ModelDevice):
         axis : int
             1, 2, or 3 to select the axis. Normally 1 and 2 are the mirror and 3 is the lens
         """
-        with self.query_lock:
-            binary_speed = '{0:06b}'.format(speed)
-            binary_speed = str(direction) + str(1) + binary_speed
-            number = int(binary_speed, 2)
-            bytestring = number.to_bytes(1, 'big')
-            self.driver.query(f"mot{axis}")
-            self.driver.write_raw(bytestring)
-            self.driver.read()
+        # with self.query_lock:
+        binary_speed = '{0:06b}'.format(speed)
+        binary_speed = str(direction) + str(1) + binary_speed
+        number = int(binary_speed, 2)
+        bytestring = number.to_bytes(1, 'big')
+        self.driver.query(f"mot{axis}")
+        self.driver.write_raw(bytestring)
+        self.driver.read()
         self.logger.info('Finished moving')
-
-    @make_async_thread
-    def monitor_temperature(self):
-        while not self._stop_temperature.is_set():
-            with self.query_lock:
-                self.temp_electronics = float(self.driver.query("TEM:0"))
-                self.temp_sample = float(self.driver.query("TEM:1"))
-            sleep(5)
 
     def finalize(self):
         self.logger.info('Finalizing Arduino')
-        self._stop_temperature.set()
+        self.power_led = 0
+        self.power_led = 0
         if self.initial_config is not None:
             self.config.update(self.initial_config)
             self.config.apply_all()
@@ -229,16 +224,3 @@ class ArduinoModel(ModelDevice):
             self.logger.warning(f'There are {len(self._threads)} still alive in Arduino')
         self.driver.close()
         super().finalize()
-
-
-if __name__ == "__main__":
-    dev = Arduino.list_devices()[0]
-    ard = ArduinoModel(dev)
-    ard.laser_power = 50
-    ard.move_piezo(60, 1, 1)
-    sleep(2)
-    ard.move_piezo(60, 0, 1)
-    ard.laser_power = 100
-    sleep(2)
-    ard.laser_power = 1
-

@@ -10,12 +10,12 @@ int i;
 
 // Variables to control the LEDs
 const int LED_POWER = 14;
-const int LED_PROCESSING = 15;
-const int LED_INITIALISING = 16;
-const int LED_READY = 17;
+const int LED_CARTRIDGE = 17;
+const int LED_SAMPLE = 15;
+const int LED_MEASURING = 16;
 const int LED_SIDE = 18;
-const int LED_FIBER = 19;
-const int LED_TOP = 20;
+const int LED_FIBER = 20;
+const int LED_TOP = 19;
 int POWER_STATUS = LOW;
 int PROCESSING_STATUS = LOW;
 int INITIALISING_STATUS = LOW;
@@ -23,6 +23,7 @@ int READY_STATUS = LOW;
 int SIDE_STATUS = LOW;
 int FIBER_STATUS = LOW;
 int TOP_STATUS = LOW;
+const int register_select = 6;
 
 // Variables and constants for the Piezo movement
 byte rx_byte = 0; // Encodes the speed/direction
@@ -53,9 +54,9 @@ void setup() {
   pinMode(STATUS_pin, INPUT);
   pinMode(DAC_Select, OUTPUT);
   pinMode(LED_POWER, OUTPUT);
-  pinMode(LED_PROCESSING, OUTPUT);
-  pinMode(LED_INITIALISING, OUTPUT);
-  pinMode(LED_READY, OUTPUT);
+  pinMode(LED_CARTRIDGE, OUTPUT);
+  pinMode(LED_SAMPLE, OUTPUT);
+  pinMode(LED_MEASURING, OUTPUT);
   pinMode(LED_SIDE, OUTPUT);
   pinMode(LED_FIBER, OUTPUT);
   pinMode(LED_TOP, OUTPUT);
@@ -66,9 +67,9 @@ void setup() {
   digitalWrite(piezo_Z2, LOW);
   digitalWrite(0, HIGH);
   digitalWrite(LED_POWER, HIGH);
-  digitalWrite(LED_PROCESSING, HIGH);
-  digitalWrite(LED_INITIALISING, HIGH);
-  digitalWrite(LED_READY, HIGH);
+  digitalWrite(LED_MEASURING, HIGH);
+  digitalWrite(LED_SAMPLE, HIGH);
+  digitalWrite(LED_CARTRIDGE, HIGH);
   digitalWrite(LED_TOP, LOW);
   digitalWrite(LED_SIDE, LOW);
   digitalWrite(LED_FIBER, LOW);
@@ -77,17 +78,14 @@ void setup() {
   Serial.flush();
   while (!Serial) { // Wait for serial to become available
   }
+  Serial.flush();
 
   mySerial.begin(19200);
   mySerial.flush();
   SPI.begin();
 
   digitalWrite(DAC_Select, HIGH);
-
-  digitalWrite(LED_POWER, HIGH);
-  digitalWrite(LED_PROCESSING, LOW);
-  digitalWrite(LED_INITIALISING, LOW);
-  digitalWrite(LED_READY, LOW);
+  write_shift(0);
 }
 
 void loop() {
@@ -139,7 +137,7 @@ void loop() {
 
       mySerial.write(rx_byte);
       if (is_step) {
-        
+
         delay(50);
         //        Serial.write("Step");
 
@@ -171,46 +169,47 @@ void loop() {
       for (i = 6; i <= Comm.length(); i++) {
         tempValue += Comm[i];
       }
-      power = tempValue.toFloat();
+      power = tempValue.toInt();
       tempValue = "";
-      if (power > 100) {
-        Serial.println("ERR:Power exceeds limits");
-      }
-      else {
-        output_value = 4095 * power / 100;
-        write_dac(output_value);
-        Serial.print("LASER:");
-        Serial.println(output_value);
-      }
+      //if (power > 100) {
+      //  Serial.println("ERR:Power exceeds limits");
+      //}
+      //else {
+      //output_value = 4095 * power / 100;
+      write_dac(power);
+      Serial.print("LASER:");
+      Serial.println(power);
+      //}
     }
     else if (Comm.startsWith("LED")) {
-      int val = Comm.substring(4, 5).toInt();
-      int mode = Comm.substring(6, 7).toInt();
-
-      switch (val) {
-        case 0:
-          digitalWrite(LED_SIDE, mode);
-          break;
-        case 1:
-          digitalWrite(LED_TOP, mode);
-          break;
-        case 2:
-          digitalWrite(LED_FIBER, mode);
-          break;
-        case 3:
-          digitalWrite(LED_POWER, mode);
-          break;
-        case 4:
-          digitalWrite(LED_PROCESSING, mode);
-          break;
-        case 5:
-          digitalWrite(LED_INITIALISING, mode);
-          break;
-        case 6:
-          digitalWrite(LED_READY, mode);
-          break;
+      int start_led = Comm.indexOf(":") + 1;
+      int end_led = Comm.lastIndexOf(":");
+      String LED = Comm.substring(start_led, end_led);
+      int mode = Comm.substring(end_led, Comm.length()).toInt();
+      if (LED == "SIDE") {
+        digitalWrite(LED_SIDE, mode);
       }
-      Serial.println("LED changed");
+      else if (LED == "TOP") {
+        digitalWrite(LED_TOP, mode);
+      }
+      else if (LED == "FIBER") {
+        digitalWrite(LED_FIBER, mode);
+      }
+      else if (LED == "POWER") {
+        digitalWrite(LED_POWER, mode);
+      }
+      else if (LED == "CARTRIDGE") {
+        digitalWrite(LED_CARTRIDGE, mode);
+      }
+      else if (LED == "SAMPLE") {
+        digitalWrite(LED_SAMPLE, mode);
+      }
+      else if (LED == "MEASURING") {
+        digitalWrite(LED_MEASURING, mode);
+      }
+      Serial.print(LED);
+      Serial.print(" changed mode to");
+      Serial.println(mode);
     }
     else if (Comm.startsWith("IDN")) {
       Serial.println("Dispertech device 2.0-scattering");
@@ -219,6 +218,28 @@ void loop() {
       if (Comm.startsWith("LED:TOP")) {
         digitalWrite(LED_TOP, HIGH);
       }
+    }
+    else if (Comm.startsWith("SHIFT")) {
+      for (i = 6; i <= Comm.length(); i++) {
+        tempValue += Comm[i];
+      }
+      int val = tempValue.toInt();
+      tempValue = "";
+      Serial.println(val);
+      write_shift(val);
+    }
+    else if (Comm.startsWith("INI")) {
+      digitalWrite(LED_CARTRIDGE, LOW);
+      digitalWrite(LED_SAMPLE, LOW);
+      digitalWrite(LED_MEASURING, LOW);
+      digitalWrite(piezo_X, LOW);
+      digitalWrite(piezo_Y, LOW);
+      digitalWrite(piezo_Z1, LOW);
+      digitalWrite(piezo_Z2, LOW);
+      delay(2);
+      mySerial.write(stop_byte);
+      delay(2);
+      Serial.println("Initialized");
     }
     else {
       Serial.println("Command not known");
@@ -230,14 +251,24 @@ void loop() {
   delay(2);
 }
 
+void write_shift(int value) {
+  digitalWrite(register_select, LOW);
+  SPI.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE0));
+  SPI.transfer(value);
+  digitalWrite(register_select, HIGH);
+  SPI.endTransaction();
+}
+
 void write_dac(int value) {
   digitalWrite(DAC_Select, LOW);
   SPI.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE0));
-  byte head = 0b00010000;
-  int new_value = value >> 8;
-  int new_new_value = value & 0b0000000011111111;
-  SPI.transfer(head | new_value);
-  SPI.transfer(new_new_value);
+
+  bitClear(value, 15); // The most significant bit must be 0 to write to the DAC register
+  bitSet(value, 13); //  Setting gain to 1 (max Vout = 2.048V)
+  bitSet(value, 12); //  Active mode operation. Vout is available
+  SPI.transfer(value >> 8);  //  Need to split the message in two 8-bit words, starting by the most-significant bit (bit 15)
+  SPI.transfer(value);
+
   digitalWrite(DAC_Select, HIGH);
   SPI.endTransaction();
 }

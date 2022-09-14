@@ -48,6 +48,10 @@ const int STATUS_pin = 9;
 // Variables for the shift register (that controls LED's)
 byte shift_status = 0;
 
+// Variables for reading out the temperature
+const int RTD_Select = 10;
+
+
 void setup() {
   pinMode(piezo_X, OUTPUT);
   pinMode(piezo_Y, OUTPUT);
@@ -88,6 +92,13 @@ void setup() {
 
   digitalWrite(DAC_Select, HIGH);
   write_shift(0);
+  // Only for testing
+  bitSet(shift_status, 4);
+  bitSet(shift_status, 1);
+  bitSet(shift_status, 3);
+  bitSet(shift_status, 6);
+  write_shift(shift_status);
+  // End testing
 }
 
 void loop() {
@@ -293,9 +304,9 @@ void write_shift(byte value) {
   digitalWrite(register_select, LOW);
   SPI.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE0));
   SPI.transfer(value);
-  digitalWrite(register_select, HIGH);
   SPI.endTransaction();
-  Serial.println(value);
+  digitalWrite(register_select, HIGH);
+//  Serial.println(value);
 }
 
 void write_dac(int value) {

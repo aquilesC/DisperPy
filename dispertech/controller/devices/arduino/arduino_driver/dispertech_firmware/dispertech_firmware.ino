@@ -48,14 +48,10 @@ const int STATUS_pin = 9;
 // Variables for the shift register (that controls LED's)
 byte shift_status = 0;
 
-<<<<<<< HEAD
-// Variables for reading out the temperature
 const int RTD_Select = 10;
 
-
-=======
 const int POWER_PIN = 17;
->>>>>>> origin/main
+const int POWER_PIN = 17;
 void setup() {
   pinMode(POWER_PIN, INPUT);
   pinMode(piezo_X, OUTPUT);

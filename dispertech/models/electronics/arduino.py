@@ -130,9 +130,9 @@ class ArduinoModel(ModelDevice):
     @top_led.setter
     def top_led(self, status):
         with self.query_lock:
-            self.driver.query(f'LED:1:{status}')
+            self.driver.query(f'LED:TOP:{status}')
             self._top_led = status
-            self.logger.info(f'LED:1:{status}')
+            self.logger.info(f'LED:TOP:{status}')
 
     @Feature()
     def fiber_led(self):
@@ -141,9 +141,9 @@ class ArduinoModel(ModelDevice):
     @fiber_led.setter
     def fiber_led(self, status):
         with self.query_lock:
-            self.driver.query(f'LED:2:{status}')
+            self.driver.query(f'LED:FIBER:{status}')
             self._fiber_led = status
-            self.logger.info(f'LED:2:{status}')
+            self.logger.info(f'LED:FIBER:{status}')
 
     @Feature()
     def power_led(self):

@@ -18,7 +18,7 @@ setup(
     url='https://github.com/aquilesC/DisperPy',
     license='GPLv3',
     author='Aquiles Carattino',
-    author_email='aquiles@dispertech.com',
+    author_email='carattino@dispertech.com',
     classifiers=[
         'Intended Audience :: End Users/Desktop',
         'Development Status :: 4 - Beta',

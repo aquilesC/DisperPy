@@ -29,7 +29,7 @@ const int register_select = 6;
 byte rx_byte = 0; // Encodes the speed/direction
 byte stop_byte = 0; // Used only to stop the movement of the piezo
 const int piezo_delay_x_y = 20; // Amount of time before stopping the movement in case it is not a single-step only for the XY mirror
-const int piezo_delay_z = 50; // Delay when moving the linear stage
+const int piezo_delay_z = 2000; // Delay when moving the linear stage
 int piezo_delay = 0; // Variable to set either value for the delay.
 const int piezo_X = 8;
 const int piezo_Y = 4;
@@ -48,11 +48,16 @@ const int STATUS_pin = 9;
 // Variables for the shift register (that controls LED's)
 byte shift_status = 0;
 
+<<<<<<< HEAD
 // Variables for reading out the temperature
 const int RTD_Select = 10;
 
 
+=======
+const int POWER_PIN = 17;
+>>>>>>> origin/main
 void setup() {
+  pinMode(POWER_PIN, INPUT);
   pinMode(piezo_X, OUTPUT);
   pinMode(piezo_Y, OUTPUT);
   pinMode(piezo_Z1, OUTPUT);
@@ -175,10 +180,10 @@ void loop() {
       digitalWrite(piezo_Z2, LOW);
     }
     else if (Comm.startsWith("laser")) {
-      output_value = digitalRead(STATUS_pin);
-      Serial.print("Status:");
-      Serial.print(output_value);
-      Serial.print(",");
+      //output_value = digitalRead(STATUS_pin);
+      //Serial.print("Status:");
+      //Serial.print(output_value);
+      //Serial.print(",");
       for (i = 6; i <= Comm.length(); i++) {
         tempValue += Comm[i];
       }
@@ -277,6 +282,9 @@ void loop() {
       Serial.println(val);
       write_shift(val);
     }
+    else if (Comm.startsWith("PWR")){
+      Serial.println(digitalRead(POWER_PIN));
+      }
     else if (Comm.startsWith("INI")) {
       digitalWrite(LED_CARTRIDGE, LOW);
       digitalWrite(LED_SAMPLE, LOW);
@@ -312,7 +320,6 @@ void write_shift(byte value) {
 void write_dac(int value) {
   digitalWrite(DAC_Select, LOW);
   SPI.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE0));
-
   bitClear(value, 15); // The most significant bit must be 0 to write to the DAC register
   bitSet(value, 13); //  Setting gain to 1 (max Vout = 2.048V)
   bitSet(value, 12); //  Active mode operation. Vout is available

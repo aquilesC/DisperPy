@@ -51,7 +51,6 @@ byte shift_status = 0;
 const int RTD_Select = 10;
 
 const int POWER_PIN = 17;
-const int POWER_PIN = 17;
 void setup() {
   pinMode(POWER_PIN, INPUT);
   pinMode(piezo_X, OUTPUT);
@@ -94,10 +93,7 @@ void setup() {
   digitalWrite(DAC_Select, HIGH);
   write_shift(0);
   // Only for testing
-  bitSet(shift_status, 4);
-  bitSet(shift_status, 1);
-  bitSet(shift_status, 3);
-  bitSet(shift_status, 6);
+  bitSet(shift_status, 0);
   write_shift(shift_status);
   // End testing
 }
